@@ -1,0 +1,65 @@
+<script type="text/javascript">
+  RED.nodes.registerType("processlink-config", {
+    category: "config",
+    defaults: {
+      name: { value: "" },
+      siteId: { value: "", required: true },
+    },
+    credentials: {
+      apiKey: { type: "password" },
+    },
+    label: function () {
+      return this.name || "Process Link Config";
+    },
+  });
+</script>
+
+<script type="text/html" data-template-name="processlink-config">
+  <div class="form-row">
+    <label for="node-config-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-config-input-name" placeholder="My Site Config" />
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-siteId"><i class="fa fa-building"></i> Site ID</label>
+    <input
+      type="text"
+      id="node-config-input-siteId"
+      placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+    />
+  </div>
+  <div class="form-row">
+    <label for="node-config-input-apiKey"><i class="fa fa-key"></i> API Key</label>
+    <input type="password" id="node-config-input-apiKey" placeholder="Your API key" />
+  </div>
+  <div class="form-tips">
+    <p>
+      Get your Site ID and API Key from
+      <a href="https://processlink.com.au" target="_blank">Process Link</a>.
+    </p>
+    <p>
+      Go to <strong>Settings → API Keys</strong> in your app to generate a new key.
+    </p>
+  </div>
+</script>
+
+<script type="text/html" data-help-name="processlink-config">
+  <p>Configuration node for Process Link API authentication.</p>
+
+  <h3>Properties</h3>
+  <dl class="message-properties">
+    <dt>Name <span class="property-type">string</span></dt>
+    <dd>Optional friendly name for this configuration.</dd>
+    <dt>Site ID <span class="property-type">string</span></dt>
+    <dd>The UUID of your site from Process Link. Found in your site settings.</dd>
+    <dt>API Key <span class="property-type">string</span></dt>
+    <dd>
+      The API key for authentication. Generate one from Settings → API Keys in your Process Link app.
+    </dd>
+  </dl>
+
+  <h3>Details</h3>
+  <p>
+    This configuration is shared across all Process Link nodes in your flow. The API key is stored
+    encrypted by Node-RED.
+  </p>
+</script>

@@ -1,0 +1,42 @@
+{
+  "name": "@processlink/node-red-contrib-processlink",
+  "publishConfig": {
+    "access": "public"
+  },
+  "version": "1.0.0",
+  "description": "Node-RED nodes for Process Link platform integration",
+  "keywords": [
+    "node-red",
+    "processlink",
+    "process-link",
+    "files",
+    "upload",
+    "api",
+    "industrial",
+    "iot",
+    "automation"
+  ],
+  "node-red": {
+    "version": ">=2.0.0",
+    "nodes": {
+      "processlink-config": "nodes/config/processlink-config.js",
+      "processlink-files-upload": "nodes/files/processlink-files-upload.js"
+    }
+  },
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "author": "Process Link <support@processlink.com.au>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/process-link/node-red-contrib-processlink.git"
+  },
+  "bugs": {
+    "url": "https://github.com/process-link/node-red-contrib-processlink/issues"
+  },
+  "homepage": "https://github.com/process-link/node-red-contrib-processlink#readme",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
