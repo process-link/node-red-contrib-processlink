@@ -4,7 +4,7 @@
     "access": "public"
   },
   "version": "1.0.0",
-  "description": "Node-RED nodes for Process Link platform integration",
+  "description": "Node-RED nodes for Process Link platform integration - upload files, send notifications, and connect to industrial automation systems",
   "keywords": [
     "node-red",
     "processlink",
@@ -14,7 +14,10 @@
     "api",
     "industrial",
     "iot",
-    "automation"
+    "automation",
+    "manufacturing",
+    "scada",
+    "plc"
   ],
   "node-red": {
     "version": ">=2.0.0",
@@ -26,7 +29,12 @@
   "scripts": {
     "test": "echo \"No tests yet\" && exit 0"
   },
-  "author": "Process Link <support@processlink.com.au>",
+  "author": {
+    "name": "Process Link",
+    "email": "support@processlink.com.au",
+    "url": "https://processlink.com.au"
+  },
+  "contributors": [],
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -35,7 +43,11 @@
   "bugs": {
     "url": "https://github.com/process-link/node-red-contrib-processlink/issues"
   },
-  "homepage": "https://github.com/process-link/node-red-contrib-processlink#readme",
+  "homepage": "https://processlink.com.au",
+  "funding": {
+    "type": "individual",
+    "url": "https://processlink.com.au"
+  },
   "engines": {
     "node": ">=14.0.0"
   }

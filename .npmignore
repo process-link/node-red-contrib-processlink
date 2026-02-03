@@ -1,0 +1,31 @@
+# Development files
+.git
+.gitignore
+.github
+
+# Documentation (README is needed, but not these)
+CONTRIBUTING.md
+docs/
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
+coverage/
+.nyc_output/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Misc
+*.log
+npm-debug.log*
