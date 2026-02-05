@@ -89,7 +89,7 @@ Uploads files to the Process Link Files API.
 |----------|-------------|
 | Config | Your Process Link credentials (Site ID + API Key) |
 | Filename | Default filename (optional, can be set via `msg.filename`) |
-| Prefix with timestamp | Adds `YYYY-MM-DD_HH-MM-SS_` prefix to filename |
+| Prefix with timestamp | Adds `YYYY-MM-DD_HH-mm-ss_` prefix to filename |
 | Timeout | Request timeout in milliseconds (default: 30000) |
 
 #### Inputs
