@@ -112,9 +112,9 @@ This node has **two outputs**:
 
 | Color | Meaning |
 |-------|---------|
+| 🔴 Red | Error occurred |
 | 🟡 Yellow | Uploading in progress |
 | 🟢 Green | Upload successful |
-| 🔴 Red | Error occurred |
 
 #### Status Codes
 
