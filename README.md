@@ -28,6 +28,7 @@ Connect your Node-RED flows to the [Process Link](https://processlink.com.au) pl
 | Node | Description |
 |------|-------------|
 | **files upload** | Upload files to Process Link Files API |
+| **system info** | Output system diagnostics (hostname, memory, disk, uptime, etc.) |
 
 *More nodes coming soon: mail, downtime logging, notes*
 
@@ -70,8 +71,11 @@ Then restart Node-RED.
 ### 3. Connect Your Flow
 
 ```
-[File In] → [files upload] → [Debug]
+[File In] → [files upload] ─┬─ Output 1 (success) → [Debug]
+                            └─ Output 2 (error)   → [Debug]
 ```
+
+---
 
 ## Node Reference
 
@@ -85,6 +89,7 @@ Uploads files to the Process Link Files API.
 |----------|-------------|
 | Config | Your Process Link credentials (Site ID + API Key) |
 | Filename | Default filename (optional, can be set via `msg.filename`) |
+| Prefix with timestamp | Adds `YYYY-MM-DD_HH-MM-SS_` prefix to filename |
 | Timeout | Request timeout in milliseconds (default: 30000) |
 
 #### Inputs
@@ -96,11 +101,12 @@ Uploads files to the Process Link Files API.
 
 #### Outputs
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `msg.payload` | object | API response with `ok`, `file_id`, `created_at` |
-| `msg.file_id` | string | The UUID of the uploaded file |
-| `msg.statusCode` | number | HTTP status code (201 on success) |
+This node has **two outputs**:
+
+| Output | When | Properties |
+|--------|------|------------|
+| **1 - Success** | HTTP 201 | `msg.payload.ok`, `msg.payload.file_id`, `msg.file_id`, `msg.statusCode` |
+| **2 - Error** | API error, network error, timeout | `msg.payload.error`, `msg.statusCode` |
 
 #### Status Indicators
 
@@ -110,9 +116,82 @@ Uploads files to the Process Link Files API.
 | 🟢 Green | Upload successful |
 | 🔴 Red | Error occurred |
 
-## Example Flow (Copy & Import)
+#### Status Codes
 
-Copy the JSON below and import it into Node-RED: **Menu → Import → Clipboard**
+| Code | Meaning |
+|------|---------|
+| 201 | Success |
+| 400 | Bad request |
+| 401 | Invalid API key |
+| 403 | API access not enabled |
+| 404 | Site not found |
+| 429 | Rate limit exceeded (max 30/min) |
+| 507 | Storage limit exceeded |
+
+---
+
+### System Info
+
+Outputs system information for diagnostics and monitoring.
+
+#### Configuration
+
+| Property | Description |
+|----------|-------------|
+| Send on deploy | When checked (default), outputs system info when the flow is deployed |
+
+#### Triggers
+
+- **On deploy** (if enabled) - Automatically sends when flow starts
+- **On input** - Any incoming message triggers a fresh reading
+
+#### Output
+
+`msg.payload` contains:
+
+| Property | Description |
+|----------|-------------|
+| `timestamp` | ISO 8601 UTC timestamp |
+| `localTime` | Device local time string |
+| `timezone` | Timezone name (e.g., "Australia/Sydney") |
+| `hostname` | Device hostname |
+| `platform` | "win32", "linux", or "darwin" |
+| `os` | OS name and version |
+| `arch` | CPU architecture |
+| `user` | User running Node-RED |
+| `workingDirectory` | Node-RED working directory |
+| `uptime` | System uptime (`raw`, `breakdown`, `formatted`) |
+| `cpu` | Model, cores, architecture |
+| `memory` | Total, free, used (bytes + formatted), usedPercent |
+| `disk` | Total, free, used (bytes + formatted), usedPercent |
+| `network` | primaryIP, mac, interfaces |
+| `nodeRed` | version, uptime |
+| `nodejs` | version |
+| `processMemory` | rss, heapTotal, heapUsed |
+
+#### Uptime/Memory Structure
+
+```json
+{
+  "uptime": {
+    "raw": 432000,
+    "breakdown": { "days": 5, "hours": 0, "minutes": 0, "seconds": 0 },
+    "formatted": "5d 0h 0m 0s"
+  },
+  "memory": {
+    "total": { "bytes": 17179869184, "formatted": "16.00 GB" },
+    "free": { "bytes": 8589934592, "formatted": "8.00 GB" },
+    "used": { "bytes": 8589934592, "formatted": "8.00 GB" },
+    "usedPercent": 50
+  }
+}
+```
+
+---
+
+## Example Flow
+
+Copy the JSON below and import into Node-RED: **Menu → Import → Clipboard**
 
 ```json
 [
@@ -158,21 +237,36 @@ Copy the JSON below and import it into Node-RED: **Menu → Import → Clipboard
         "apiUrl": "https://files.processlink.com.au/api/upload",
         "x": 470,
         "y": 100,
-        "wires": [["pl-debug"]]
+        "wires": [["pl-debug-success"], ["pl-debug-error"]]
     },
     {
-        "id": "pl-debug",
+        "id": "pl-debug-success",
         "type": "debug",
         "z": "",
-        "name": "Result",
+        "name": "Success",
         "active": true,
         "tosidebar": true,
         "console": false,
         "tostatus": false,
         "complete": "true",
         "targetType": "full",
-        "x": 650,
-        "y": 100,
+        "x": 680,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "pl-debug-error",
+        "type": "debug",
+        "z": "",
+        "name": "Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 670,
+        "y": 120,
         "wires": []
     }
 ]
@@ -184,43 +278,7 @@ Copy the JSON below and import it into Node-RED: **Menu → Import → Clipboard
 3. Click **Deploy**
 4. Click the inject button to upload
 
-### Dynamic Filename
-
-Use a Function node to set the filename dynamically:
-
-```javascript
-msg.filename = "report-" + new Date().toISOString().split('T')[0] + ".csv";
-return msg;
-```
-
-### Upload with Error Handling
-
-```
-[File In] → [files upload] → [Switch] → [Debug (success)]
-                                     ↘ [Debug (error)]
-```
-
-Use a Switch node to route based on `msg.statusCode`:
-- Route 1: `msg.statusCode == 201` (success)
-- Route 2: Otherwise (error)
-
-## Error Handling
-
-| Status Code | Meaning | Solution |
-|-------------|---------|----------|
-| 201 | Success | File uploaded successfully |
-| 400 | Bad Request | Check that payload is a valid file buffer |
-| 401 | Unauthorized | Verify your API key is correct |
-| 403 | Forbidden | Enable API access in site settings |
-| 404 | Not Found | Verify your Site ID is correct |
-| 429 | Rate Limited | Max 30 uploads/minute per site |
-| 507 | Storage Full | Contact administrator to increase storage |
-
-## Rate Limits
-
-- **30 uploads per minute** per site
-- Exceeding the limit returns a 429 status code
-- Implement retry logic in your flow for high-volume uploads
+---
 
 ## Security
 
@@ -239,10 +297,6 @@ Use a Switch node to route based on `msg.statusCode`:
 - 🐛 **Issues**: [GitHub Issues](https://github.com/process-link/node-red-contrib-processlink/issues)
 - 📧 **Email**: support@processlink.com.au
 - 🌐 **Website**: [processlink.com.au](https://processlink.com.au)
-
-## Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md) before submitting a pull request.
 
 ## License
 
