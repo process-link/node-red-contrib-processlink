@@ -55,7 +55,19 @@ module.exports = function (RED) {
 
       // Get filename
       const filename = msg.filename || config.filename || "file.bin";
-      const basename = filename.split(/[\\/]/).pop();
+      let basename = filename.split(/[\\/]/).pop();
+
+      // Add timestamp prefix if enabled
+      if (config.timestampPrefix) {
+        const now = new Date();
+        const timestamp = now.getFullYear() + "-" +
+          String(now.getMonth() + 1).padStart(2, "0") + "-" +
+          String(now.getDate()).padStart(2, "0") + "_" +
+          String(now.getHours()).padStart(2, "0") + "-" +
+          String(now.getMinutes()).padStart(2, "0") + "-" +
+          String(now.getSeconds()).padStart(2, "0");
+        basename = timestamp + "_" + basename;
+      }
 
       // Build multipart form data
       const boundary = "----NodeREDProcessLink" + Date.now() + Math.random().toString(36).substring(2);

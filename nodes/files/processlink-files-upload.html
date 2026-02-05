@@ -6,6 +6,7 @@
       name: { value: "" },
       server: { value: "", type: "processlink-config", required: true },
       filename: { value: "" },
+      timestampPrefix: { value: false },
       timeout: { value: "30000" },
       apiUrl: { value: "https://files.processlink.com.au/api/upload" },
     },
@@ -38,6 +39,11 @@
     <input type="text" id="node-input-filename" placeholder="msg.filename (or specify default)" />
   </div>
   <div class="form-row">
+    <label for="node-input-timestampPrefix">&nbsp;</label>
+    <input type="checkbox" id="node-input-timestampPrefix" style="width: auto; margin-right: 10px;">
+    <span>Prefix filename with timestamp (YYYY-MM-DD_HH-MM-SS_)</span>
+  </div>
+  <div class="form-row">
     <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
     <input type="text" id="node-input-timeout" placeholder="30000" />
     <span style="margin-left: 5px; color: #888">ms</span>
@@ -56,7 +62,17 @@
     <dt>payload <span class="property-type">buffer | string</span></dt>
     <dd>The file content to upload.</dd>
     <dt class="optional">filename <span class="property-type">string</span></dt>
-    <dd>The filename to use. Defaults to the configured filename or "file.bin".</dd>
+    <dd>The filename that will appear in Process Link Files. Can be set via <code>msg.filename</code> or configured in the node. Defaults to "file.bin" if not set. Any path is stripped (e.g., <code>/tmp/report.csv</code> becomes <code>report.csv</code>).</dd>
+  </dl>
+
+  <h3>Configuration</h3>
+  <dl class="message-properties">
+    <dt>Filename <span class="property-type">string</span></dt>
+    <dd>Default filename to use if <code>msg.filename</code> is not set.</dd>
+    <dt>Prefix with timestamp <span class="property-type">boolean</span></dt>
+    <dd>When enabled, automatically prefixes the filename with a timestamp in the format <code>YYYY-MM-DD_HH-MM-SS_</code>. For example, <code>report.csv</code> becomes <code>2025-02-05_14-30-45_report.csv</code>.</dd>
+    <dt>Timeout <span class="property-type">number</span></dt>
+    <dd>Request timeout in milliseconds. Default is 30000 (30 seconds).</dd>
   </dl>
 
   <h3>Outputs</h3>
