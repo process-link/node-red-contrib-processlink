@@ -11,7 +11,7 @@
       apiUrl: { value: "https://files.processlink.com.au/api/upload" },
     },
     inputs: 1,
-    outputs: 1,
+    outputs: 2,
     icon: "processlink.png",
     paletteLabel: "files upload",
     label: function () {
@@ -21,7 +21,7 @@
       return this.name ? "node_label_italic" : "";
     },
     inputLabels: "file buffer",
-    outputLabels: "response",
+    outputLabels: ["success", "error"],
   });
 </script>
 
@@ -62,68 +62,60 @@
     <dt>payload <span class="property-type">buffer | string</span></dt>
     <dd>The file content to upload.</dd>
     <dt class="optional">filename <span class="property-type">string</span></dt>
-    <dd>The filename that will appear in Process Link Files. Can be set via <code>msg.filename</code> or configured in the node. Defaults to "file.bin" if not set. Any path is stripped (e.g., <code>/tmp/report.csv</code> becomes <code>report.csv</code>).</dd>
+    <dd>Filename for the upload. Can be set via <code>msg.filename</code> or in the node config. Defaults to "file.bin".</dd>
+  </dl>
+
+  <h3>Outputs</h3>
+  <p>This node has two outputs:</p>
+  <ol>
+    <li><strong>Success</strong> - Upload completed successfully (HTTP 201)</li>
+    <li><strong>Error</strong> - Upload failed (network error, API error, or timeout)</li>
+  </ol>
+
+  <h4>Success Output</h4>
+  <dl class="message-properties">
+    <dt>payload.ok <span class="property-type">boolean</span></dt>
+    <dd><code>true</code></dd>
+    <dt>payload.file_id <span class="property-type">string</span></dt>
+    <dd>UUID of the uploaded file.</dd>
+    <dt>file_id <span class="property-type">string</span></dt>
+    <dd>Same as above (convenience property).</dd>
+    <dt>statusCode <span class="property-type">number</span></dt>
+    <dd>201</dd>
+  </dl>
+
+  <h4>Error Output</h4>
+  <dl class="message-properties">
+    <dt>payload.error <span class="property-type">string</span></dt>
+    <dd>Error message from the API or network layer.</dd>
+    <dt>statusCode <span class="property-type">number</span></dt>
+    <dd>HTTP status code, or 0 for network/timeout errors.</dd>
   </dl>
 
   <h3>Configuration</h3>
   <dl class="message-properties">
     <dt>Filename <span class="property-type">string</span></dt>
-    <dd>Default filename to use if <code>msg.filename</code> is not set.</dd>
+    <dd>Default filename if <code>msg.filename</code> is not set.</dd>
     <dt>Prefix with timestamp <span class="property-type">boolean</span></dt>
-    <dd>When enabled, automatically prefixes the filename with a timestamp in the format <code>YYYY-MM-DD_HH-MM-SS_</code>. For example, <code>report.csv</code> becomes <code>2025-02-05_14-30-45_report.csv</code>.</dd>
+    <dd>Adds <code>YYYY-MM-DD_HH-MM-SS_</code> prefix to filename.</dd>
     <dt>Timeout <span class="property-type">number</span></dt>
-    <dd>Request timeout in milliseconds. Default is 30000 (30 seconds).</dd>
+    <dd>Request timeout in ms. Default: 30000.</dd>
   </dl>
-
-  <h3>Outputs</h3>
-  <dl class="message-properties">
-    <dt>payload <span class="property-type">object</span></dt>
-    <dd>The API response containing <code>ok</code>, <code>file_id</code>, and <code>created_at</code>.</dd>
-    <dt>file_id <span class="property-type">string</span></dt>
-    <dd>The UUID of the uploaded file (convenience property).</dd>
-    <dt>statusCode <span class="property-type">number</span></dt>
-    <dd>The HTTP status code (201 on success).</dd>
-  </dl>
-
-  <h3>Details</h3>
-  <p>
-    This node uploads files to your Process Link site. The file content should be passed in
-    <code>msg.payload</code> as a Buffer (from a file-in node) or as a string.
-  </p>
-  <p>
-    The filename can be set in <code>msg.filename</code> or configured in the node properties. If
-    the filename contains a path, only the basename will be used.
-  </p>
 
   <h3>Status Codes</h3>
   <ul>
-    <li><strong>201</strong> - Upload successful</li>
-    <li><strong>400</strong> - Bad request (missing file, invalid site ID)</li>
+    <li><strong>201</strong> - Success</li>
+    <li><strong>400</strong> - Bad request</li>
     <li><strong>401</strong> - Invalid API key</li>
-    <li><strong>403</strong> - API access not enabled for this site</li>
+    <li><strong>403</strong> - API access not enabled</li>
     <li><strong>404</strong> - Site not found</li>
-    <li><strong>429</strong> - Rate limit exceeded (max 30 uploads/minute)</li>
+    <li><strong>429</strong> - Rate limit exceeded</li>
     <li><strong>507</strong> - Storage limit exceeded</li>
   </ul>
 
-  <h3>Example Flow</h3>
-  <pre>
-[File In] → [Process Link Upload] → [Debug]
-
-The File In node reads a file and outputs msg.payload (Buffer)
-and msg.filename. Connect directly to this node to upload.</pre>
-
   <h3>References</h3>
   <ul>
-    <li>
-      <a href="https://portal.processlink.com.au" target="_blank">Process Link Portal</a> - Manage
-      your sites and API keys
-    </li>
-    <li>
-      <a href="https://github.com/process-link/node-red-contrib-processlink" target="_blank"
-        >GitHub</a
-      >
-      - Source code and issues
-    </li>
+    <li><a href="https://portal.processlink.com.au" target="_blank">Process Link Portal</a></li>
+    <li><a href="https://github.com/process-link/node-red-contrib-processlink" target="_blank">GitHub</a></li>
   </ul>
 </script>

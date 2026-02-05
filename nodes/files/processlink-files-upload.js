@@ -121,25 +121,24 @@ module.exports = function (RED) {
           msg.headers = res.headers;
 
           if (res.statusCode === 201 && parsedResponse.ok) {
-            // Success
+            // Success - send to output 1
             msg.file_id = parsedResponse.file_id;
             node.status({
               fill: "green",
               shape: "dot",
               text: `uploaded: ${parsedResponse.file_id?.substring(0, 8)}...`,
             });
-            send(msg);
+            send([msg, null]);
             done();
 
             // Clear status after 5 seconds
             setTimeout(() => node.status({}), 5000);
           } else {
-            // API error
+            // API error - send to output 2
             const errorMsg = parsedResponse.error || parsedResponse.message || `HTTP ${res.statusCode}`;
             node.status({ fill: "red", shape: "dot", text: errorMsg });
 
-            // Still send the message so users can handle errors in their flow
-            send(msg);
+            send([null, msg]);
             done();
 
             // Clear status after 10 seconds
@@ -152,7 +151,7 @@ module.exports = function (RED) {
         node.status({ fill: "red", shape: "ring", text: "request failed" });
         msg.payload = { error: err.message };
         msg.statusCode = 0;
-        send(msg);
+        send([null, msg]);
         done(err);
 
         setTimeout(() => node.status({}), 10000);
@@ -165,7 +164,7 @@ module.exports = function (RED) {
         node.status({ fill: "red", shape: "ring", text: "timeout" });
         msg.payload = { error: "Request timed out" };
         msg.statusCode = 0;
-        send(msg);
+        send([null, msg]);
         done(new Error("Request timed out"));
 
         setTimeout(() => node.status({}), 10000);
