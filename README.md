@@ -116,17 +116,79 @@ Uploads files to the Process Link Files API.
 | 🟢 Green | Upload successful |
 | 🔴 Red | Error occurred |
 
-## Examples
+## Example Flow (Copy & Import)
 
-### Basic File Upload
+Copy the JSON below and import it into Node-RED: **Menu → Import → Clipboard**
 
+```json
+[
+    {
+        "id": "pl-inject",
+        "type": "inject",
+        "z": "",
+        "name": "Upload File",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 110,
+        "y": 100,
+        "wires": [["pl-file-in"]]
+    },
+    {
+        "id": "pl-file-in",
+        "type": "file in",
+        "z": "",
+        "name": "Read File",
+        "filename": "/tmp/myfile.csv",
+        "filenameType": "str",
+        "format": "",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": true,
+        "x": 270,
+        "y": 100,
+        "wires": [["pl-upload"]]
+    },
+    {
+        "id": "pl-upload",
+        "type": "processlink-files-upload",
+        "z": "",
+        "name": "Upload to Process Link",
+        "server": "",
+        "filename": "",
+        "timeout": "30000",
+        "apiUrl": "https://files.processlink.com.au/api/upload",
+        "x": 470,
+        "y": 100,
+        "wires": [["pl-debug"]]
+    },
+    {
+        "id": "pl-debug",
+        "type": "debug",
+        "z": "",
+        "name": "Result",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "x": 650,
+        "y": 100,
+        "wires": []
+    }
+]
 ```
-[File In] → [files upload] → [Debug]
-```
 
-1. Configure a **File In** node to read your file
-2. Connect it to the **files upload** node
-3. Add a **Debug** node to see the response
+**After importing:**
+1. Double-click the **Read File** node → change the file path to your file
+2. Double-click the **Upload to Process Link** node → click the pencil icon → enter your **Site ID** and **API Key**
+3. Click **Deploy**
+4. Click the inject button to upload
 
 ### Dynamic Filename
 
