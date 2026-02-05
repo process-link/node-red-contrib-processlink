@@ -252,4 +252,4 @@ Contributions are welcome! Please read our [Contributing Guide](CONTRIBUTING.md)
 
 ## License
 
-[MIT](LICENSE) © [Process Link](https://processlink.com.au)
+[MIT](LICENSE)
