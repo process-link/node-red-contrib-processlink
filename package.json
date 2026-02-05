@@ -17,13 +17,17 @@
     "automation",
     "manufacturing",
     "scada",
-    "plc"
+    "plc",
+    "system-info",
+    "diagnostics",
+    "monitoring"
   ],
   "node-red": {
     "version": ">=2.0.0",
     "nodes": {
       "processlink-config": "nodes/config/processlink-config.js",
-      "processlink-files-upload": "nodes/files/processlink-files-upload.js"
+      "processlink-files-upload": "nodes/files/processlink-files-upload.js",
+      "processlink-system-info": "nodes/system/processlink-system-info.js"
     }
   },
   "scripts": {

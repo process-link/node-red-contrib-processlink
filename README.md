@@ -1,11 +1,5 @@
 <p align="center">
   <a href="https://processlink.com.au">
-    <img src="processlink-logo.png" alt="Process Link" width="80">
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://processlink.com.au">
     <img src="processlink-banner.png" alt="Process Link" height="50">
   </a>
 </p>

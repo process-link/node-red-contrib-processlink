@@ -1,0 +1,295 @@
+<script type="text/javascript">
+  RED.nodes.registerType("processlink-system-info", {
+    category: "Process Link",
+    color: "#f97316",
+    defaults: {
+      name: { value: "" },
+      sendOnDeploy: { value: true },
+    },
+    inputs: 1,
+    outputs: 1,
+    icon: "processlink.png",
+    paletteLabel: "system info",
+    label: function () {
+      return this.name || "system info";
+    },
+    labelStyle: function () {
+      return this.name ? "node_label_italic" : "";
+    },
+    inputLabels: "trigger",
+    outputLabels: "system info",
+  });
+</script>
+
+<script type="text/html" data-template-name="processlink-system-info">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-sendOnDeploy">&nbsp;</label>
+    <input type="checkbox" id="node-input-sendOnDeploy" style="width: auto; margin-right: 10px;" checked>
+    <span>Send system info on deploy</span>
+  </div>
+</script>
+
+<script type="text/html" data-help-name="processlink-system-info">
+  <p>Outputs detailed system information for diagnostics, monitoring, and remote support.</p>
+
+  <h3>What This Node Does</h3>
+  <p>
+    This node collects information about the device running Node-RED and outputs it as a structured object.
+    Use it for diagnostics, health monitoring, or sending device information to Process Link.
+  </p>
+
+  <h3>When Does It Trigger?</h3>
+  <ul>
+    <li><strong>On deploy</strong> (if enabled) - Automatically sends system info when the flow starts or is redeployed</li>
+    <li><strong>On any input message</strong> - Send any message to trigger a fresh reading</li>
+  </ul>
+
+  <h3>Configuration</h3>
+  <dl class="message-properties">
+    <dt>Send on deploy <span class="property-type">boolean</span></dt>
+    <dd>When checked (default), the node automatically outputs system info when the flow is deployed or Node-RED starts. Useful for "phone home" scenarios where devices should report in on boot.</dd>
+  </dl>
+
+  <h3>Output Structure</h3>
+  <p>The node outputs <code>msg.payload</code> with the following structure:</p>
+
+  <h4>Time Information</h4>
+  <pre>{
+  "timestamp": "2025-02-05T14:32:15.123Z",  // ISO 8601 UTC
+  "localTime": "2/5/2025, 2:32:15 PM",      // Device local time
+  "timezone": "Australia/Sydney"             // Timezone name
+}</pre>
+
+  <h4>Device Identity</h4>
+  <pre>{
+  "hostname": "FACTORY-PC-01",    // Device name
+  "platform": "win32",            // "win32", "linux", or "darwin"
+  "os": "Windows_NT 10.0.19045",  // OS name and version
+  "arch": "x64",                  // CPU architecture
+  "user": "operator",             // User running Node-RED
+  "workingDirectory": "C:\\Users\\operator\\.node-red"
+}</pre>
+
+  <h4>System Uptime</h4>
+  <p>How long since the system was last rebooted:</p>
+  <pre>{
+  "uptime": {
+    "raw": 432000,              // Raw seconds (for calculations)
+    "breakdown": {
+      "days": 5,
+      "hours": 0,
+      "minutes": 0,
+      "seconds": 0
+    },
+    "formatted": "5d 0h 0m 0s"  // Human-readable
+  }
+}</pre>
+
+  <h4>CPU Information</h4>
+  <pre>{
+  "cpu": {
+    "model": "Intel(R) Core(TM) i5-8500 CPU @ 3.00GHz",
+    "cores": 6,
+    "arch": "x64"
+  }
+}</pre>
+
+  <h4>System Memory (RAM)</h4>
+  <p>Total system memory - useful for diagnosing performance issues:</p>
+  <pre>{
+  "memory": {
+    "total": {
+      "bytes": 17179869184,
+      "formatted": "16.00 GB"
+    },
+    "free": {
+      "bytes": 8589934592,
+      "formatted": "8.00 GB"
+    },
+    "used": {
+      "bytes": 8589934592,
+      "formatted": "8.00 GB"
+    },
+    "usedPercent": 50
+  }
+}</pre>
+
+  <h4>Disk Space</h4>
+  <p>Storage information (may not be available on all systems):</p>
+  <pre>{
+  "disk": {
+    "total": {
+      "bytes": 536870912000,
+      "formatted": "500.00 GB"
+    },
+    "free": {
+      "bytes": 128849018880,
+      "formatted": "120.00 GB"
+    },
+    "used": {
+      "bytes": 408021893120,
+      "formatted": "380.00 GB"
+    },
+    "usedPercent": 76
+  }
+}</pre>
+
+  <h4>Network Information</h4>
+  <pre>{
+  "network": {
+    "primaryIP": "192.168.1.100",  // First non-internal IPv4
+    "mac": "00:1A:2B:3C:4D:5E",    // MAC address
+    "interfaces": { ... }          // All network interfaces (detailed)
+  }
+}</pre>
+
+  <h4>Node-RED Information</h4>
+  <pre>{
+  "nodeRed": {
+    "version": "3.1.0",
+    "uptime": {
+      "raw": 3600,
+      "breakdown": { "days": 0, "hours": 1, "minutes": 0, "seconds": 0 },
+      "formatted": "0d 1h 0m 0s"
+    }
+  }
+}</pre>
+
+  <h4>Node.js Runtime</h4>
+  <pre>{
+  "nodejs": {
+    "version": "v18.17.0"
+  }
+}</pre>
+
+  <h4>Process Memory</h4>
+  <p>How much memory Node-RED itself is using:</p>
+  <pre>{
+  "processMemory": {
+    "rss": {
+      "bytes": 157286400,
+      "formatted": "150.00 MB"
+    },
+    "heapTotal": {
+      "bytes": 104857600,
+      "formatted": "100.00 MB"
+    },
+    "heapUsed": {
+      "bytes": 83886080,
+      "formatted": "80.00 MB"
+    }
+  }
+}</pre>
+
+  <h3>Example: Display Specific Values</h3>
+  <p>Use a <strong>Change</strong> node or <strong>Function</strong> node to extract specific values:</p>
+  <pre>
+// In a Function node - get just the essentials
+return {
+  payload: {
+    hostname: msg.payload.hostname,
+    ip: msg.payload.network.primaryIP,
+    memoryUsed: msg.payload.memory.used.formatted,
+    diskFree: msg.payload.disk?.free.formatted || "unknown"
+  }
+};</pre>
+
+  <h3>Example: Monitor Memory Usage</h3>
+  <p>Trigger on an <strong>Inject</strong> node set to repeat, then use a <strong>Switch</strong> node to alert on high usage:</p>
+  <pre>
+// Switch node condition:
+msg.payload.memory.usedPercent > 90
+
+// This routes messages when memory exceeds 90%</pre>
+
+  <h3>Example: Send to Process Link on Startup</h3>
+  <p>With "Send on deploy" enabled, connect this node to a <strong>Process Link Files Upload</strong> node to automatically report device info when Node-RED starts:</p>
+  <pre>
+[System Info] → [Function] → [Files Upload]
+
+// Function node to format as text file:
+msg.payload = Buffer.from(JSON.stringify(msg.payload, null, 2));
+msg.filename = msg.payload.hostname + "-system-info.json";
+return msg;</pre>
+
+  <h3>Example: Check Timezone for Debugging</h3>
+  <p>During remote support, quickly verify the device's timezone matches expectations:</p>
+  <pre>
+// In a Function node:
+node.warn("Device timezone: " + msg.payload.timezone);
+node.warn("Local time: " + msg.payload.localTime);
+return msg;</pre>
+
+  <h3>Full Output Example</h3>
+  <p>Here's a complete example of the output on a Windows machine:</p>
+  <pre>{
+  "timestamp": "2025-02-05T03:32:15.123Z",
+  "localTime": "2/5/2025, 2:32:15 PM",
+  "timezone": "Australia/Sydney",
+  "hostname": "FACTORY-PC-01",
+  "platform": "win32",
+  "os": "Windows_NT 10.0.19045",
+  "arch": "x64",
+  "user": "operator",
+  "workingDirectory": "C:\\Users\\operator\\.node-red",
+  "uptime": {
+    "raw": 432000,
+    "breakdown": { "days": 5, "hours": 0, "minutes": 0, "seconds": 0 },
+    "formatted": "5d 0h 0m 0s"
+  },
+  "cpu": {
+    "model": "Intel(R) Core(TM) i5-8500 CPU @ 3.00GHz",
+    "cores": 6,
+    "arch": "x64"
+  },
+  "memory": {
+    "total": { "bytes": 17179869184, "formatted": "16.00 GB" },
+    "free": { "bytes": 8589934592, "formatted": "8.00 GB" },
+    "used": { "bytes": 8589934592, "formatted": "8.00 GB" },
+    "usedPercent": 50
+  },
+  "disk": {
+    "total": { "bytes": 536870912000, "formatted": "500.00 GB" },
+    "free": { "bytes": 128849018880, "formatted": "120.00 GB" },
+    "used": { "bytes": 408021893120, "formatted": "380.00 GB" },
+    "usedPercent": 76
+  },
+  "network": {
+    "primaryIP": "192.168.1.100",
+    "mac": "00:1A:2B:3C:4D:5E",
+    "interfaces": { "Ethernet": [...] }
+  },
+  "nodeRed": {
+    "version": "3.1.0",
+    "uptime": {
+      "raw": 3600,
+      "breakdown": { "days": 0, "hours": 1, "minutes": 0, "seconds": 0 },
+      "formatted": "0d 1h 0m 0s"
+    }
+  },
+  "nodejs": { "version": "v18.17.0" },
+  "processMemory": {
+    "rss": { "bytes": 157286400, "formatted": "150.00 MB" },
+    "heapTotal": { "bytes": 104857600, "formatted": "100.00 MB" },
+    "heapUsed": { "bytes": 83886080, "formatted": "80.00 MB" }
+  }
+}</pre>
+
+  <h3>Tips</h3>
+  <ul>
+    <li><strong>Disk info may be unavailable</strong> on some systems due to permissions. The <code>disk</code> property will be missing in that case.</li>
+    <li><strong>Node-RED uptime</strong> tracks how long since the flow was deployed, not system uptime.</li>
+    <li><strong>MAC address</strong> is useful for uniquely identifying devices across IP changes.</li>
+    <li>Use <strong>usedPercent</strong> values for easy threshold checks without calculations.</li>
+  </ul>
+
+  <h3>References</h3>
+  <ul>
+    <li><a href="https://portal.processlink.com.au" target="_blank">Process Link Portal</a> - Manage your sites</li>
+    <li><a href="https://github.com/process-link/node-red-contrib-processlink" target="_blank">GitHub</a> - Source code and issues</li>
+  </ul>
+</script>
