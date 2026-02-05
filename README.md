@@ -1,6 +1,12 @@
 <p align="center">
   <a href="https://processlink.com.au">
-    <img src="processlink-banner.png" alt="Process Link" height="60">
+    <img src="processlink-logo.png" alt="Process Link" width="80">
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://processlink.com.au">
+    <img src="processlink-banner.png" alt="Process Link" height="50">
   </a>
 </p>
 
@@ -53,8 +59,8 @@ Then restart Node-RED.
 
 ### 1. Get Your Credentials
 
-1. Log in to your Process Link app (e.g., [Files](https://files.processlink.com.au))
-2. Go to **Settings → API Keys**
+1. Log in to the [Process Link Portal](https://portal.processlink.com.au)
+2. Go to **Developer → API Keys**
 3. Click **Generate API Key**
 4. Copy your **Site ID** and **API Key**
 

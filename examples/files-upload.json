@@ -132,7 +132,7 @@
         "type": "comment",
         "z": "pl-example-flow",
         "name": "Instructions: Configure the 'Upload to Process Link' node with your Site ID and API Key",
-        "info": "1. Double-click the orange 'Upload to Process Link' node\n2. Click the pencil icon next to 'Config'\n3. Enter your Site ID and API Key from the Process Link Files app\n4. Update the 'Read File' node with the path to your file\n5. Click the inject button to upload",
+        "info": "1. Double-click the orange 'Upload to Process Link' node\n2. Click the pencil icon next to 'Config'\n3. Enter your Site ID and API Key from the Process Link Portal (Developer → API Keys)\n4. Update the 'Read File' node with the path to your file\n5. Click the inject button to upload",
         "x": 330,
         "y": 40,
         "wires": []

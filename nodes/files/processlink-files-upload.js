@@ -82,7 +82,7 @@ module.exports = function (RED) {
           "Content-Type": `multipart/form-data; boundary=${boundary}`,
           "Content-Length": body.length,
           "x-site-id": siteId,
-          "x-api-key": apiKey,
+          "Authorization": `Bearer ${apiKey}`,
         },
       };
 
