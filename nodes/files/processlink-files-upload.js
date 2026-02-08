@@ -53,8 +53,8 @@ module.exports = function (RED) {
         return;
       }
 
-      // Get filename
-      const filename = msg.filename || config.filename || "file.bin";
+      // Get filename (config takes priority over msg.filename)
+      const filename = config.filename || msg.filename || "file.bin";
       let basename = filename.split(/[\\/]/).pop();
 
       // Add timestamp prefix if enabled
@@ -71,14 +71,38 @@ module.exports = function (RED) {
 
       // Build multipart form data
       const boundary = "----NodeREDProcessLink" + Date.now() + Math.random().toString(36).substring(2);
+      const parts = [];
 
-      const header = Buffer.from(
+      // Add file part
+      parts.push(Buffer.from(
         `--${boundary}\r\n` +
         `Content-Disposition: form-data; name="file"; filename="${basename}"\r\n` +
         `Content-Type: application/octet-stream\r\n\r\n`
-      );
-      const footer = Buffer.from(`\r\n--${boundary}--\r\n`);
-      const body = Buffer.concat([header, fileBuffer, footer]);
+      ));
+      parts.push(fileBuffer);
+
+      // Add areaId if specified
+      if (config.areaId) {
+        parts.push(Buffer.from(
+          `\r\n--${boundary}\r\n` +
+          `Content-Disposition: form-data; name="areaId"\r\n\r\n` +
+          config.areaId
+        ));
+      }
+
+      // Add folderId if specified
+      if (config.folderId) {
+        parts.push(Buffer.from(
+          `\r\n--${boundary}\r\n` +
+          `Content-Disposition: form-data; name="folderId"\r\n\r\n` +
+          config.folderId
+        ));
+      }
+
+      // Add closing boundary
+      parts.push(Buffer.from(`\r\n--${boundary}--\r\n`));
+
+      const body = Buffer.concat(parts);
 
       // Parse URL
       const apiUrl = config.apiUrl || "https://files.processlink.com.au/api/upload";

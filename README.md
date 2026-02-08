@@ -71,35 +71,44 @@ Then restart Node-RED.
 ### 3. Connect Your Flow
 
 ```
-[File In] → [files upload] ─┬─ Output 1 (success) → [Debug]
-                            └─ Output 2 (error)   → [Debug]
+[Inject] → [File In] → [files upload] ─┬─ Output 1 (success) → [Debug]
+                                       └─ Output 2 (error)   → [Debug]
 ```
 
 ---
 
 ## Node Reference
 
-### Files Upload
+---
+
+## Files Upload
 
 Uploads files to the Process Link Files API.
 
-#### Configuration
+### Configuration
 
 | Property | Description |
 |----------|-------------|
 | Config | Your Process Link credentials (Site ID + API Key) |
-| Filename | Default filename (optional, can be set via `msg.filename`) |
-| Prefix with timestamp | Adds `YYYY-MM-DD_HH-mm-ss_` prefix to filename |
+| Filename | Filename for uploaded file (takes priority over `msg.filename`) |
+| Location | Destination area/folder in the Files app (default: site root) |
+| Prefix with timestamp | Adds `YYYY-MM-DD_HH-mm-ss_` prefix to filename (ISO 8601 format) |
 | Timeout | Request timeout in milliseconds (default: 30000) |
 
-#### Inputs
+**Filename priority:** Config filename → `msg.filename` → `file.bin`
+
+**Location:** The dropdown shows your site's folder structure organized by area. Select where uploaded files should be stored. Areas and folders are fetched from the Files API when you open the node configuration.
+
+**Timestamp prefix:** When enabled, always prepends the current date/time to the filename, regardless of whether it came from config or `msg.filename`.
+
+### Inputs
 
 | Property | Type | Description |
 |----------|------|-------------|
 | `msg.payload` | Buffer \| string | The file content to upload |
-| `msg.filename` | string | *(Optional)* Filename to use |
+| `msg.filename` | string | *(Optional)* Fallback filename if not set in config |
 
-#### Outputs
+### Outputs
 
 This node has **two outputs**:
 
@@ -108,7 +117,7 @@ This node has **two outputs**:
 | **1 - Success** | HTTP 201 | `msg.payload.ok`, `msg.payload.file_id`, `msg.file_id`, `msg.statusCode` |
 | **2 - Error** | API error, network error, timeout | `msg.payload.error`, `msg.statusCode` |
 
-#### Status Indicators
+### Status Indicators
 
 | Color | Meaning |
 |-------|---------|
@@ -116,7 +125,7 @@ This node has **two outputs**:
 | 🟡 Yellow | Uploading in progress |
 | 🟢 Green | Upload successful |
 
-#### Status Codes
+### Status Codes
 
 | Code | Meaning |
 |------|---------|
@@ -130,22 +139,22 @@ This node has **two outputs**:
 
 ---
 
-### System Info
+## System Info
 
 Outputs system information for diagnostics and monitoring.
 
-#### Configuration
+### Configuration
 
 | Property | Description |
 |----------|-------------|
 | Send on deploy | When checked (default), outputs system info when the flow is deployed |
 
-#### Triggers
+### Triggers
 
 - **On deploy** (if enabled) - Automatically sends when flow starts
 - **On input** - Any incoming message triggers a fresh reading
 
-#### Output
+### Output
 
 `msg.payload` contains:
 
@@ -169,7 +178,7 @@ Outputs system information for diagnostics and monitoring.
 | `nodejs` | version |
 | `processMemory` | rss, heapTotal, heapUsed |
 
-#### Uptime/Memory Structure
+### Uptime/Memory Structure
 
 ```json
 {
@@ -293,7 +302,6 @@ Copy the JSON below and import into Node-RED: **Menu → Import → Clipboard**
 
 ## Support
 
-- 📖 **Documentation**: [GitHub Wiki](https://github.com/process-link/node-red-contrib-processlink/wiki)
 - 🐛 **Issues**: [GitHub Issues](https://github.com/process-link/node-red-contrib-processlink/issues)
 - 📧 **Email**: support@processlink.com.au
 - 🌐 **Website**: [processlink.com.au](https://processlink.com.au)

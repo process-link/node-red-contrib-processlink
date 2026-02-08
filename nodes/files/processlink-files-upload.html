@@ -6,6 +6,8 @@
       name: { value: "" },
       server: { value: "", type: "processlink-config", required: true },
       filename: { value: "" },
+      areaId: { value: "" },
+      folderId: { value: "" },
       timestampPrefix: { value: false },
       timeout: { value: "30000" },
       apiUrl: { value: "https://files.processlink.com.au/api/upload" },
@@ -22,6 +24,131 @@
     },
     inputLabels: "file buffer",
     outputLabels: ["success", "error"],
+    oneditprepare: function () {
+      var node = this;
+      var $location = $("#node-input-location");
+      var $areaId = $("#node-input-areaId");
+      var $folderId = $("#node-input-folderId");
+      var $server = $("#node-input-server");
+
+      function loadLocations() {
+        var configId = $server.val();
+        if (!configId) {
+          $location.html('<option value="">-- Select config first --</option>');
+          return;
+        }
+
+        var configNode = RED.nodes.node(configId);
+        if (!configNode || !configNode.siteId) {
+          $location.html('<option value="">-- Config not ready --</option>');
+          return;
+        }
+
+        $location.html('<option value="">Loading...</option>');
+
+        var baseUrl = "https://files.processlink.com.au/api/sites/" + configNode.siteId;
+        var headers = { "Authorization": "Bearer " + configNode.credentials.apiKey };
+
+        // Fetch both areas and folders in parallel
+        $.when(
+          $.ajax({ url: baseUrl + "/areas", method: "GET", headers: headers }),
+          $.ajax({ url: baseUrl + "/folders", method: "GET", headers: headers })
+        ).done(function (areasResult, foldersResult) {
+          var areas = areasResult[0] || [];
+          var folders = foldersResult[0] || [];
+
+          // Build current selection key for matching
+          var currentAreaId = node.areaId || "";
+          var currentFolderId = node.folderId || "";
+          var currentKey = currentAreaId + "|" + currentFolderId;
+
+          var options = '<option value="|" data-area="" data-folder="">Site root (default)</option>';
+
+          // Group folders by area
+          var foldersByArea = {};
+          folders.forEach(function (f) {
+            var areaKey = f.area_id || "";
+            if (!foldersByArea[areaKey]) foldersByArea[areaKey] = [];
+            foldersByArea[areaKey].push(f);
+          });
+
+          // Add areas with their folders
+          areas.forEach(function (area) {
+            var areaFolders = foldersByArea[area.id] || [];
+            options += '<optgroup label="' + area.area_name + '">';
+
+            // Area root option
+            var areaRootKey = area.id + "|";
+            var areaRootSelected = areaRootKey === currentKey ? ' selected' : '';
+            options += '<option value="' + areaRootKey + '" data-area="' + area.id + '" data-folder=""' + areaRootSelected + '>' + area.area_name + ' (root)</option>';
+
+            // Root folders in this area
+            var rootFolders = areaFolders.filter(function (f) { return !f.parent_id; });
+            rootFolders.sort(function (a, b) { return a.name.localeCompare(b.name); });
+
+            rootFolders.forEach(function (folder) {
+              var folderKey = area.id + "|" + folder.id;
+              var selected = folderKey === currentKey ? ' selected' : '';
+              options += '<option value="' + folderKey + '" data-area="' + area.id + '" data-folder="' + folder.id + '"' + selected + '>&nbsp;&nbsp;' + folder.name + '</option>';
+
+              // Child folders
+              var children = areaFolders.filter(function (c) { return c.parent_id === folder.id; });
+              children.sort(function (a, b) { return a.name.localeCompare(b.name); });
+              children.forEach(function (child) {
+                var childKey = area.id + "|" + child.id;
+                var childSelected = childKey === currentKey ? ' selected' : '';
+                options += '<option value="' + childKey + '" data-area="' + area.id + '" data-folder="' + child.id + '"' + childSelected + '>&nbsp;&nbsp;&nbsp;&nbsp;' + child.name + '</option>';
+              });
+            });
+
+            options += '</optgroup>';
+          });
+
+          // Add folders without an area
+          var noAreaFolders = foldersByArea[""] || [];
+          if (noAreaFolders.length > 0) {
+            options += '<optgroup label="No Area">';
+            var rootFolders = noAreaFolders.filter(function (f) { return !f.parent_id; });
+            rootFolders.sort(function (a, b) { return a.name.localeCompare(b.name); });
+
+            rootFolders.forEach(function (folder) {
+              var folderKey = "|" + folder.id;
+              var selected = folderKey === currentKey ? ' selected' : '';
+              options += '<option value="' + folderKey + '" data-area="" data-folder="' + folder.id + '"' + selected + '>' + folder.name + '</option>';
+
+              var children = noAreaFolders.filter(function (c) { return c.parent_id === folder.id; });
+              children.sort(function (a, b) { return a.name.localeCompare(b.name); });
+              children.forEach(function (child) {
+                var childKey = "|" + child.id;
+                var childSelected = childKey === currentKey ? ' selected' : '';
+                options += '<option value="' + childKey + '" data-area="" data-folder="' + child.id + '"' + childSelected + '>&nbsp;&nbsp;' + child.name + '</option>';
+              });
+            });
+            options += '</optgroup>';
+          }
+
+          $location.html(options);
+        }).fail(function (xhr) {
+          console.error("Failed to load locations:", xhr.responseText);
+          $location.html('<option value="|">Site root (default)</option><option disabled>-- Failed to load --</option>');
+        });
+      }
+
+      // Update hidden inputs when selection changes
+      $location.on("change", function () {
+        var $selected = $location.find(":selected");
+        $areaId.val($selected.data("area") || "");
+        $folderId.val($selected.data("folder") || "");
+      });
+
+      // Load locations when config changes
+      $server.on("change", function () {
+        loadLocations();
+      });
+
+      // Initial load
+      loadLocations();
+    },
   });
 </script>
 
@@ -37,6 +164,14 @@
   <div class="form-row">
     <label for="node-input-filename"><i class="fa fa-file"></i> Filename</label>
     <input type="text" id="node-input-filename" placeholder="msg.filename (or specify default)" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-location"><i class="fa fa-folder"></i> Location</label>
+    <select id="node-input-location" style="width: 70%">
+      <option value="|">Site root (default)</option>
+    </select>
+    <input type="hidden" id="node-input-areaId" />
+    <input type="hidden" id="node-input-folderId" />
   </div>
   <div class="form-row">
     <label for="node-input-timestampPrefix">&nbsp;</label>
@@ -62,7 +197,7 @@
     <dt>payload <span class="property-type">buffer | string</span></dt>
     <dd>The file content to upload.</dd>
     <dt class="optional">filename <span class="property-type">string</span></dt>
-    <dd>Filename for the upload. Can be set via <code>msg.filename</code> or in the node config. Defaults to "file.bin".</dd>
+    <dd>Fallback filename if not set in config. Priority: config → <code>msg.filename</code> → "file.bin".</dd>
   </dl>
 
   <h3>Outputs</h3>
@@ -95,9 +230,11 @@
   <h3>Configuration</h3>
   <dl class="message-properties">
     <dt>Filename <span class="property-type">string</span></dt>
-    <dd>Default filename if <code>msg.filename</code> is not set.</dd>
+    <dd>Filename for uploaded file. Takes priority over <code>msg.filename</code>.</dd>
+    <dt>Location <span class="property-type">select</span></dt>
+    <dd>Destination area/folder in the Files app. Default: site root.</dd>
     <dt>Prefix with timestamp <span class="property-type">boolean</span></dt>
-    <dd>Adds <code>YYYY-MM-DD_HH-mm-ss_</code> prefix to filename.</dd>
+    <dd>Adds <code>YYYY-MM-DD_HH-mm-ss_</code> prefix (ISO 8601). Applied regardless of filename source.</dd>
     <dt>Timeout <span class="property-type">number</span></dt>
     <dd>Request timeout in ms. Default: 30000.</dd>
   </dl>
