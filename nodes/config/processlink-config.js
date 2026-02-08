@@ -11,13 +11,29 @@ module.exports = function (RED) {
     const req = https.request(options, (res) => {
       // Follow redirects (301, 302, 307, 308)
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        const redirectUrl = new URL(res.headers.location);
-        const redirectOptions = {
-          hostname: redirectUrl.hostname,
-          path: redirectUrl.pathname + redirectUrl.search,
-          method: "GET",
-          headers: options.headers,
-        };
+        const location = res.headers.location;
+        let redirectOptions;
+
+        if (location.startsWith("http")) {
+          // Absolute URL
+          const redirectUrl = new URL(location);
+          redirectOptions = {
+            hostname: redirectUrl.hostname,
+            path: redirectUrl.pathname + redirectUrl.search,
+            method: "GET",
+            headers: options.headers,
+          };
+        } else {
+          // Relative URL - keep same host
+          redirectOptions = {
+            hostname: options.hostname,
+            path: location,
+            method: "GET",
+            headers: options.headers,
+          };
+        }
+
+        console.log(`[ProcessLink] Following redirect to: ${redirectOptions.hostname}${redirectOptions.path}`);
         httpsGet(redirectOptions, callback);
         return;
       }
