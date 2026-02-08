@@ -127,8 +127,19 @@
           $location.html(options);
         }).fail(function (xhr) {
           console.error("Failed to load locations:", xhr.responseText);
-          // Still allow site root if API fails
-          $location.html('<option value="|">Site root (default)</option><option disabled>-- Failed to load locations --</option>');
+          // Check if config needs to be deployed
+          var errorMsg = "";
+          try {
+            var err = JSON.parse(xhr.responseText);
+            if (err.error === "Config node not found") {
+              errorMsg = "Deploy config first, then click Refresh";
+            } else {
+              errorMsg = err.error || "Failed to load";
+            }
+          } catch (e) {
+            errorMsg = "Failed to load locations";
+          }
+          $location.html('<option value="|">Site root (default)</option><option disabled>-- ' + errorMsg + ' --</option>');
         });
       }
 
@@ -141,6 +152,11 @@
 
       // Load locations when config changes
       $server.on("change", function () {
+        loadLocations();
+      });
+
+      // Refresh button
+      $("#node-input-location-refresh").on("click", function () {
         loadLocations();
       });
 
@@ -165,9 +181,12 @@
   </div>
   <div class="form-row">
     <label for="node-input-location"><i class="fa fa-folder"></i> Location</label>
-    <select id="node-input-location" style="width: 70%">
+    <select id="node-input-location" style="width: 60%">
       <option value="|">Site root (default)</option>
     </select>
+    <button type="button" id="node-input-location-refresh" class="red-ui-button" style="margin-left: 5px">
+      <i class="fa fa-refresh"></i>
+    </button>
     <input type="hidden" id="node-input-areaId" />
     <input type="hidden" id="node-input-folderId" />
   </div>
