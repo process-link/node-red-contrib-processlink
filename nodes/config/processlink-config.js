@@ -63,16 +63,27 @@ module.exports = function (RED) {
         let data = "";
         areasRes.on("data", (chunk) => (data += chunk));
         areasRes.on("end", () => {
-          try {
-            areasData = JSON.parse(data);
-          } catch (e) {
+          if (areasRes.statusCode !== 200) {
+            console.log(`[ProcessLink] Areas API returned ${areasRes.statusCode}: ${data}`);
             areasData = [];
+          } else {
+            try {
+              areasData = JSON.parse(data);
+              if (!Array.isArray(areasData)) {
+                console.log(`[ProcessLink] Areas API returned non-array:`, areasData);
+                areasData = [];
+              }
+            } catch (e) {
+              console.log(`[ProcessLink] Areas API parse error:`, e.message);
+              areasData = [];
+            }
           }
           checkComplete();
         });
       }
     );
-    areasReq.on("error", () => {
+    areasReq.on("error", (err) => {
+      console.log(`[ProcessLink] Areas request error:`, err.message);
       if (!hasError) {
         hasError = true;
         res.status(500).json({ error: "Failed to fetch areas" });
@@ -92,16 +103,27 @@ module.exports = function (RED) {
         let data = "";
         foldersRes.on("data", (chunk) => (data += chunk));
         foldersRes.on("end", () => {
-          try {
-            foldersData = JSON.parse(data);
-          } catch (e) {
+          if (foldersRes.statusCode !== 200) {
+            console.log(`[ProcessLink] Folders API returned ${foldersRes.statusCode}: ${data}`);
             foldersData = [];
+          } else {
+            try {
+              foldersData = JSON.parse(data);
+              if (!Array.isArray(foldersData)) {
+                console.log(`[ProcessLink] Folders API returned non-array:`, foldersData);
+                foldersData = [];
+              }
+            } catch (e) {
+              console.log(`[ProcessLink] Folders API parse error:`, e.message);
+              foldersData = [];
+            }
           }
           checkComplete();
         });
       }
     );
-    foldersReq.on("error", () => {
+    foldersReq.on("error", (err) => {
+      console.log(`[ProcessLink] Folders request error:`, err.message);
       if (!hasError) {
         hasError = true;
         res.status(500).json({ error: "Failed to fetch folders" });

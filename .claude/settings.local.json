@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd folder/area support to upload API\n\n- Add areaId and folderId params to /api/upload endpoint\n- Add API key auth to /api/sites/[siteId]/folders endpoint\n- Add new /api/sites/[siteId]/areas endpoint with API key auth\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd location selector for file uploads \\(v1.2.0\\)\n\n- Add Location dropdown showing Area > Folder hierarchy\n- Fetch areas and folders from Files API with API key auth\n- Send areaId and folderId in upload requests\n- Update README documentation\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(npm publish:*)",
+      "WebFetch(domain:files.processlink.com.au)",
+      "Bash(git commit:*)",
+      "Bash(npm view:*)"
+    ]
+  }
+}
