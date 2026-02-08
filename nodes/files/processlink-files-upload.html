@@ -46,16 +46,13 @@
 
         $location.html('<option value="">Loading...</option>');
 
-        var baseUrl = "https://files.processlink.com.au/api/sites/" + configNode.siteId;
-        var headers = { "Authorization": "Bearer " + configNode.credentials.apiKey };
-
-        // Fetch both areas and folders in parallel
-        $.when(
-          $.ajax({ url: baseUrl + "/areas", method: "GET", headers: headers }),
-          $.ajax({ url: baseUrl + "/folders", method: "GET", headers: headers })
-        ).done(function (areasResult, foldersResult) {
-          var areas = areasResult[0] || [];
-          var folders = foldersResult[0] || [];
+        // Fetch locations via server-side endpoint (credentials are not accessible client-side)
+        $.ajax({
+          url: "processlink/locations/" + configId,
+          method: "GET",
+        }).done(function (result) {
+          var areas = result.areas || [];
+          var folders = result.folders || [];
 
           // Build current selection key for matching
           var currentAreaId = node.areaId || "";
@@ -130,7 +127,8 @@
           $location.html(options);
         }).fail(function (xhr) {
           console.error("Failed to load locations:", xhr.responseText);
-          $location.html('<option value="|">Site root (default)</option><option disabled>-- Failed to load --</option>');
+          // Still allow site root if API fails
+          $location.html('<option value="|">Site root (default)</option><option disabled>-- Failed to load locations --</option>');
         });
       }
 
