@@ -6,6 +6,29 @@
 module.exports = function (RED) {
   const https = require("https");
 
+  // Helper to make HTTPS request that follows redirects
+  function httpsGet(options, callback) {
+    const req = https.request(options, (res) => {
+      // Follow redirects (301, 302, 307, 308)
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        const redirectUrl = new URL(res.headers.location);
+        const redirectOptions = {
+          hostname: redirectUrl.hostname,
+          path: redirectUrl.pathname + redirectUrl.search,
+          method: "GET",
+          headers: options.headers,
+        };
+        httpsGet(redirectOptions, callback);
+        return;
+      }
+      callback(res);
+    });
+    req.on("error", (err) => {
+      callback(null, err);
+    });
+    req.end();
+  }
+
   function ProcessLinkConfigNode(config) {
     RED.nodes.createNode(this, config);
     this.name = config.name;
@@ -52,14 +75,22 @@ module.exports = function (RED) {
     }
 
     // Fetch areas
-    const areasReq = https.request(
+    httpsGet(
       {
         hostname: "files.processlink.com.au",
         path: `${baseUrl}/areas`,
         method: "GET",
         headers: headers,
       },
-      (areasRes) => {
+      (areasRes, err) => {
+        if (err) {
+          console.log(`[ProcessLink] Areas request error:`, err.message);
+          if (!hasError) {
+            hasError = true;
+            res.status(500).json({ error: "Failed to fetch areas" });
+          }
+          return;
+        }
         let data = "";
         areasRes.on("data", (chunk) => (data += chunk));
         areasRes.on("end", () => {
@@ -82,24 +113,24 @@ module.exports = function (RED) {
         });
       }
     );
-    areasReq.on("error", (err) => {
-      console.log(`[ProcessLink] Areas request error:`, err.message);
-      if (!hasError) {
-        hasError = true;
-        res.status(500).json({ error: "Failed to fetch areas" });
-      }
-    });
-    areasReq.end();
 
     // Fetch folders
-    const foldersReq = https.request(
+    httpsGet(
       {
         hostname: "files.processlink.com.au",
         path: `${baseUrl}/folders`,
         method: "GET",
         headers: headers,
       },
-      (foldersRes) => {
+      (foldersRes, err) => {
+        if (err) {
+          console.log(`[ProcessLink] Folders request error:`, err.message);
+          if (!hasError) {
+            hasError = true;
+            res.status(500).json({ error: "Failed to fetch folders" });
+          }
+          return;
+        }
         let data = "";
         foldersRes.on("data", (chunk) => (data += chunk));
         foldersRes.on("end", () => {
@@ -122,13 +153,5 @@ module.exports = function (RED) {
         });
       }
     );
-    foldersReq.on("error", (err) => {
-      console.log(`[ProcessLink] Folders request error:`, err.message);
-      if (!hasError) {
-        hasError = true;
-        res.status(500).json({ error: "Failed to fetch folders" });
-      }
-    });
-    foldersReq.end();
   });
 };
