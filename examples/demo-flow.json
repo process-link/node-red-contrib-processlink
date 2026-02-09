@@ -1,0 +1,919 @@
+[
+    {
+        "id": "e453f86ed59b6b3d",
+        "type": "tab",
+        "label": "ProcessLink Demo",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3379f552aa11c76a",
+        "type": "comment",
+        "z": "e453f86ed59b6b3d",
+        "name": "ProcessLink Demo Flow - Double-click to read",
+        "info": "# ProcessLink Demo Flow\n\nThis flow demonstrates the ProcessLink\nnodes for Node-RED.\n\n## How to use\n\nDouble-click on any comment node\n(like this one) to read detailed\ninstructions for each example.\n\n## Setup\n\n1. Configure your API keys in the\n   ProcessLink config nodes\n2. Run each example by clicking\n   the inject button\n\n## Examples\n\n1. CSV Generation\n2. System Info\n3. Simple File Upload\n4. Upload + Email (with attachment)\n5. Upload + Email (link only)\n6. Send Email Only\n7. Send SMS Alert",
+        "x": 180,
+        "y": 20,
+        "wires": []
+    },
+    {
+        "id": "824fc4dac865fc0c",
+        "type": "comment",
+        "z": "e453f86ed59b6b3d",
+        "name": "1. CSV Generation",
+        "info": "# CSV Generation\n\nGenerates sample sensor data, converts\nit to CSV format, and saves to a file.\n\n## What it does\n\n- Creates 3 sample temperature readings\n- Converts the JSON array to CSV\n- Saves to /tmp/output.csv\n\n## Usage\n\nRuns automatically on deploy.\nThe CSV file is used by the upload\nexamples below.",
+        "x": 110,
+        "y": 60,
+        "wires": []
+    },
+    {
+        "id": "0db009e7de4fa74c",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Generate Sample Data",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "[{\"timestamp\":\"2025-12-21T10:00:00+11:00\",\"tag\":\"temp\",\"value\":23.4},{\"timestamp\":\"2025-12-21T10:00:01+11:00\",\"tag\":\"temp\",\"value\":23.5},{\"timestamp\":\"2025-12-21T10:00:02+11:00\",\"tag\":\"temp\",\"value\":23.6}]",
+        "payloadType": "json",
+        "x": 150,
+        "y": 120,
+        "wires": [
+            [
+                "80d4b37292c2f8a4"
+            ]
+        ]
+    },
+    {
+        "id": "80d4b37292c2f8a4",
+        "type": "csv",
+        "z": "e453f86ed59b6b3d",
+        "name": "Convert to CSV",
+        "sep": ",",
+        "hdrin": false,
+        "hdrout": "all",
+        "multi": "one",
+        "ret": "\\n",
+        "temp": "",
+        "skip": "0",
+        "strings": true,
+        "include_empty_strings": false,
+        "include_null_values": false,
+        "x": 380,
+        "y": 120,
+        "wires": [
+            [
+                "63be3970a8057757",
+                "fe574b6c181973bf"
+            ]
+        ]
+    },
+    {
+        "id": "63be3970a8057757",
+        "type": "file",
+        "z": "e453f86ed59b6b3d",
+        "name": "Save CSV File",
+        "filename": "/tmp/output.csv",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": true,
+        "overwriteFile": "true",
+        "encoding": "utf8",
+        "x": 580,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fe574b6c181973bf",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "1. Preview CSV",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 580,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "e45c12f6ad3420bf",
+        "type": "comment",
+        "z": "e453f86ed59b6b3d",
+        "name": "2. System Info",
+        "info": "# System Info\n\nOutputs system diagnostics.\n\n## What it does\n\n- Displays Node-RED version\n- Shows OS and platform info\n- Reports memory usage\n- Lists network interfaces\n\n## Usage\n\nUseful for debugging Node-RED\nenvironment and connectivity.",
+        "x": 90,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "b7846f1f7b1a20a8",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Trigger System Info",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 280,
+        "wires": [
+            [
+                "32f2a39d5ac1d8a4"
+            ]
+        ]
+    },
+    {
+        "id": "32f2a39d5ac1d8a4",
+        "type": "processlink-system-info",
+        "z": "e453f86ed59b6b3d",
+        "name": "",
+        "sendOnDeploy": true,
+        "x": 510,
+        "y": 280,
+        "wires": [
+            [
+                "17c079f239d1fd59"
+            ]
+        ]
+    },
+    {
+        "id": "17c079f239d1fd59",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "2. System Info",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 850,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "d103f616be66e790",
+        "type": "comment",
+        "z": "e453f86ed59b6b3d",
+        "name": "3. Simple File Upload",
+        "info": "# Simple File Upload\n\nReads a local file and uploads it\nto ProcessLink Files.\n\n## What it does\n\n- Reads /tmp/output.csv from disk\n- Uploads to ProcessLink Files API\n- Returns file_id on success\n\n## Configuration\n\n- Set your API key in config node\n- Optionally set Area ID / Folder ID\n- Enable timestamp prefix for\n  unique filenames\n\n## Outputs\n\n- Top: Success (file_id returned)\n- Bottom: Error details",
+        "x": 120,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "877488bf977ce4e4",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Trigger Upload",
+        "props": [
+            {
+                "p": "filename",
+                "v": "/tmp/output.csv",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 120,
+        "y": 440,
+        "wires": [
+            [
+                "8eb13c4f38e51cdc"
+            ]
+        ]
+    },
+    {
+        "id": "8eb13c4f38e51cdc",
+        "type": "file in",
+        "z": "e453f86ed59b6b3d",
+        "name": "Read File",
+        "filename": "/tmp/output.csv",
+        "filenameType": "str",
+        "format": "",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": true,
+        "x": 340,
+        "y": 440,
+        "wires": [
+            [
+                "1a89e1055a910385"
+            ]
+        ]
+    },
+    {
+        "id": "1a89e1055a910385",
+        "type": "processlink-files-upload",
+        "z": "e453f86ed59b6b3d",
+        "name": "Upload to ProcessLink",
+        "server": "c2b2132b8076fcce",
+        "filename": "node-red-1",
+        "areaId": "39a0f586-a153-4002-ac2d-a6add1364d3a",
+        "folderId": "",
+        "timestampPrefix": true,
+        "timeout": "30000",
+        "apiUrl": "https://files.processlink.com.au/api/upload",
+        "x": 540,
+        "y": 440,
+        "wires": [
+            [
+                "c5407b12e24d5ab0"
+            ],
+            [
+                "f0e65ef6af02013d"
+            ]
+        ]
+    },
+    {
+        "id": "c5407b12e24d5ab0",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "3. Upload Success",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 870,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "f0e65ef6af02013d",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "3. Upload Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "f7c0952ea069c503",
+        "type": "comment",
+        "z": "e453f86ed59b6b3d",
+        "name": "4. Upload + Email (with attachment)",
+        "info": "# Upload + Email (with attachment)\n\nUploads a file to the Files app, then\nsends an email with the file attached.\n\n## What it does\n\n- Reads and uploads file to Files app\n- On success, attaches file to email\n- Email includes link to view in Files\n- Uses branded template from ProcessMail\n\n## Chaining nodes\n\nUpload success output connects\ndirectly to Send Email node.\nThe file_id passes automatically.\n\n## Outputs\n\n- Upload Success/Error from upload\n- Email Sent/Error from mail node",
+        "x": 140,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "315252e4fbf91a63",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Trigger Upload + Email",
+        "props": [
+            {
+                "p": "filename",
+                "v": "/tmp/output.csv",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 600,
+        "wires": [
+            [
+                "e8b62f99e892bc45"
+            ]
+        ]
+    },
+    {
+        "id": "e8b62f99e892bc45",
+        "type": "file in",
+        "z": "e453f86ed59b6b3d",
+        "name": "Read File",
+        "filename": "/tmp/output.csv",
+        "filenameType": "str",
+        "format": "",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": true,
+        "x": 340,
+        "y": 600,
+        "wires": [
+            [
+                "21d050f0d25e4f58"
+            ]
+        ]
+    },
+    {
+        "id": "21d050f0d25e4f58",
+        "type": "processlink-files-upload",
+        "z": "e453f86ed59b6b3d",
+        "name": "Upload to ProcessLink",
+        "server": "c67a8c5b0867c77a",
+        "filename": "node-red-9",
+        "areaId": "",
+        "folderId": "",
+        "timestampPrefix": true,
+        "timeout": "30000",
+        "apiUrl": "https://files.processlink.com.au/api/upload",
+        "x": 540,
+        "y": 600,
+        "wires": [
+            [
+                "4bb5475586ba8395",
+                "0558f3e1e8323bda"
+            ],
+            [
+                "1b4aeba4b4ee5db3"
+            ]
+        ]
+    },
+    {
+        "id": "4bb5475586ba8395",
+        "type": "processlink-mail",
+        "z": "e453f86ed59b6b3d",
+        "name": "Send Email",
+        "server": "cfcef837004f2691",
+        "to": "tom.sharwood@processlink.com.au",
+        "subject": "Subject - Test",
+        "body": "",
+        "bodyType": "text",
+        "cc": "",
+        "bcc": "",
+        "replyTo": "",
+        "useTemplate": true,
+        "timeout": "30000",
+        "apiUrl": "https://processmail.processlink.com.au/api/send-email",
+        "x": 850,
+        "y": 600,
+        "wires": [
+            [
+                "d904f5f2d14cd3a5"
+            ],
+            [
+                "0787590eb2e41ee8"
+            ]
+        ]
+    },
+    {
+        "id": "0558f3e1e8323bda",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "4. Upload Success",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 870,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "1b4aeba4b4ee5db3",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "4. Upload Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "d904f5f2d14cd3a5",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "4. Email Sent",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1070,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "0787590eb2e41ee8",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "4. Email Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1070,
+        "y": 620,
+        "wires": []
+    },
+    {
+        "id": "a09c89e3803eaeed",
+        "type": "comment",
+        "z": "e453f86ed59b6b3d",
+        "name": "6. Send Email Only",
+        "info": "# Send Email Only\n\nSends an email directly without\nuploading any files.\n\n## What it does\n\n- Sends email via ProcessMail API\n- Uses configured email template\n- Subject can be set dynamically\n\n## Dynamic subject\n\nThe inject node sets msg.subject\nwhich overrides the configured\nsubject in the node.\n\n## Outputs\n\n- Top: Email sent successfully\n- Bottom: Error details",
+        "x": 110,
+        "y": 1000,
+        "wires": []
+    },
+    {
+        "id": "ec38ce38159c80c6",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Trigger Email Only",
+        "props": [
+            {
+                "p": "filename",
+                "v": "/tmp/output.csv",
+                "vt": "str"
+            },
+            {
+                "p": "subject",
+                "v": "inject test subject",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 1060,
+        "wires": [
+            [
+                "dac3167124c39de6"
+            ]
+        ]
+    },
+    {
+        "id": "dac3167124c39de6",
+        "type": "processlink-mail",
+        "z": "e453f86ed59b6b3d",
+        "name": "Send Email",
+        "server": "cfcef837004f2691",
+        "to": "tom.sharwood@processlink.com.au",
+        "subject": "",
+        "body": "",
+        "bodyType": "text",
+        "cc": "",
+        "bcc": "",
+        "replyTo": "",
+        "useTemplate": true,
+        "timeout": "30000",
+        "apiUrl": "https://processmail.processlink.com.au/api/send-email",
+        "x": 510,
+        "y": 1060,
+        "wires": [
+            [
+                "8d23b8ea320678bc"
+            ],
+            [
+                "8ed054fa02691edc"
+            ]
+        ]
+    },
+    {
+        "id": "8d23b8ea320678bc",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "6. Email Sent",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 870,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "8ed054fa02691edc",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "6. Email Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 870,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "09610af1dd215ff4",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Trigger Email - Set Subject",
+        "props": [
+            {
+                "p": "filename",
+                "v": "/tmp/output.csv",
+                "vt": "str"
+            },
+            {
+                "p": "subject",
+                "v": "inject test subject",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 170,
+        "y": 1100,
+        "wires": [
+            [
+                "dac3167124c39de6"
+            ]
+        ]
+    },
+    {
+        "id": "0a335ddb3f82a122",
+        "type": "comment",
+        "z": "e453f86ed59b6b3d",
+        "name": "5. Upload + Email (link only)",
+        "info": "# Upload + Email (link only)\n\nUploads a file and sends an email with\njust a link (no attachment).\n\n## What it does\n\n- Uploads file to Files app\n- Sends email with link to file\n- File is NOT attached to email\n\n## When to use\n\nUse this for large files that would\nexceed email size limits. Recipients\ncan click the link to download.\n\n## How it works\n\nThe Send Email node has 'Link only'\nchecked, which includes file links\ninstead of attaching files.",
+        "x": 130,
+        "y": 780,
+        "wires": []
+    },
+    {
+        "id": "c26db3a49dc4d0a9",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Trigger Link Only",
+        "props": [
+            {
+                "p": "filename",
+                "v": "/tmp/output.csv",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 130,
+        "y": 840,
+        "wires": [
+            [
+                "24e22a3ed06adf38"
+            ]
+        ]
+    },
+    {
+        "id": "24e22a3ed06adf38",
+        "type": "file in",
+        "z": "e453f86ed59b6b3d",
+        "name": "Read File",
+        "filename": "/tmp/output.csv",
+        "filenameType": "str",
+        "format": "",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": true,
+        "x": 340,
+        "y": 840,
+        "wires": [
+            [
+                "43134ac459da2c43"
+            ]
+        ]
+    },
+    {
+        "id": "43134ac459da2c43",
+        "type": "processlink-files-upload",
+        "z": "e453f86ed59b6b3d",
+        "name": "Upload to ProcessLink",
+        "server": "c67a8c5b0867c77a",
+        "filename": "large-report",
+        "areaId": "",
+        "folderId": "",
+        "timestampPrefix": true,
+        "timeout": "30000",
+        "apiUrl": "https://files.processlink.com.au/api/upload",
+        "x": 540,
+        "y": 840,
+        "wires": [
+            [
+                "5ae2d094b68c1dd0",
+                "linkonly_upload_success"
+            ],
+            [
+                "6c9a5a23f533f1e3"
+            ]
+        ]
+    },
+        {
+        "id": "5ae2d094b68c1dd0",
+        "type": "processlink-mail",
+        "z": "e453f86ed59b6b3d",
+        "name": "Send Email (Link Only)",
+        "server": "cfcef837004f2691",
+        "to": "tom.sharwood@processlink.com.au",
+        "subject": "File Available for Download",
+        "body": "A file has been uploaded for you.",
+        "bodyType": "text",
+        "cc": "",
+        "bcc": "",
+        "replyTo": "",
+        "useTemplate": true,
+        "linkOnly": true,
+        "timeout": "30000",
+        "apiUrl": "https://processmail.processlink.com.au/api/send-email",
+        "x": 780,
+        "y": 840,
+        "wires": [
+            [
+                "b40d0330d5768d06"
+            ],
+            [
+                "14139331801411d5"
+            ]
+        ]
+    },
+    {
+        "id": "linkonly_upload_success",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "5. Upload Success",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 870,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "6c9a5a23f533f1e3",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "5. Upload Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "b40d0330d5768d06",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "5. Email Sent (Link Only)",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1010,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "14139331801411d5",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "5. Email Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 990,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "sms_comment_7",
+        "type": "comment",
+        "z": "e453f86ed59b6b3d",
+        "name": "7. Send SMS Alert",
+        "info": "# Send SMS Alert\n\nSends SMS messages via Twilio.\n\n## What it does\n\n- Sends SMS via ProcessMail API\n- Uses Twilio for delivery\n- Phone numbers must be E.164 format\n\n## Phone Number Format\n\nE.164 format: + country code + number\n- Australia: +61412345678\n- US/Canada: +12025551234\n- UK: +447911123456\n\n## SMS Segments\n\n- Standard text: 160 chars/segment\n- Unicode/emoji: 70 chars/segment\n\n## Outputs\n\n- Top: SMS sent successfully\n- Bottom: Error details",
+        "x": 110,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "sms_inject_7",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Trigger SMS",
+        "props": [
+            {
+                "p": "to",
+                "v": "+61412345678",
+                "vt": "str"
+            },
+            {
+                "p": "body",
+                "v": "ALERT: Temperature exceeded threshold on Line 3",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 110,
+        "y": 1260,
+        "wires": [
+            [
+                "sms_node_7"
+            ]
+        ]
+    },
+    {
+        "id": "sms_node_7",
+        "type": "processlink-sms",
+        "z": "e453f86ed59b6b3d",
+        "name": "Send SMS",
+        "server": "cfcef837004f2691",
+        "to": "",
+        "body": "",
+        "timeout": "30000",
+        "apiUrl": "https://processmail.processlink.com.au/api/send-sms",
+        "x": 370,
+        "y": 1260,
+        "wires": [
+            [
+                "sms_success_7"
+            ],
+            [
+                "sms_error_7"
+            ]
+        ]
+    },
+    {
+        "id": "sms_success_7",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "7. SMS Sent",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 1240,
+        "wires": []
+    },
+    {
+        "id": "sms_error_7",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "7. SMS Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 1280,
+        "wires": []
+    },
+    {
+        "id": "sms_inject_payload_7",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "SMS via payload",
+        "props": [
+            {
+                "p": "to",
+                "v": "+61412345678",
+                "vt": "str"
+            },
+            {
+                "p": "payload",
+                "v": "Equipment maintenance due tomorrow",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 120,
+        "y": 1300,
+        "wires": [
+            [
+                "sms_node_7"
+            ]
+        ]
+    },
+    {
+        "id": "c2b2132b8076fcce",
+        "type": "processlink-config",
+        "name": "node-red-1 | Melbourne Site",
+        "siteId": "7f55dade-2207-41d0-95f9-462505792c1a"
+    },
+    {
+        "id": "c67a8c5b0867c77a",
+        "type": "processlink-config",
+        "name": "node-red-9",
+        "siteId": "7f55dade-2207-41d0-95f9-462505792c1a"
+    },
+    {
+        "id": "cfcef837004f2691",
+        "type": "processlink-config",
+        "name": "node-red-11",
+        "siteId": "",
+        "apiKeyPrefix": "plk_8e6J"
+    }
+]

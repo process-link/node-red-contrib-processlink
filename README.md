@@ -29,6 +29,7 @@ Connect your Node-RED flows to the [Process Link](https://processlink.com.au) pl
 |------|-------------|
 | **files upload** | Upload files to Process Link Files API |
 | **send email** | Send emails via ProcessMail API (with optional attachments) |
+| **send SMS** | Send SMS messages via ProcessMail API (Twilio) |
 | **system info** | Output system diagnostics (hostname, memory, disk, uptime, etc.) |
 
 ## Installation
@@ -160,8 +161,8 @@ Sends emails via the ProcessMail API with optional file attachments.
 | Property | Type | Description |
 |----------|------|-------------|
 | `msg.to` | string \| string[] | Recipient email address(es) |
-| `msg.subject` | string | Email subject (or `msg.topic`) |
-| `msg.payload` | string | Email body content |
+| `msg.subject` | string | Email subject |
+| `msg.body` | string | Email body content (optional - has default) |
 | `msg.bodyType` | string | "text" (default) or "html" |
 | `msg.file_id` | string | *(Optional)* Single file attachment from upload node |
 | `msg.attachments` | array | *(Optional)* Multiple attachments: `[{ fileId: "uuid" }]` |
@@ -192,6 +193,55 @@ Sends emails via the ProcessMail API with optional file attachments.
 | 401 | Invalid API key |
 | 403 | Service not enabled |
 | 429 | Daily email limit reached |
+
+---
+
+## Send SMS
+
+Sends SMS messages via the ProcessMail API using Twilio.
+
+### Configuration
+
+| Property | Description |
+|----------|-------------|
+| Config | Your Process Link credentials (API Key) |
+| To | Recipient phone number in E.164 format (e.g., `+61412345678`) |
+| Body | SMS message text |
+| Timeout | Request timeout in milliseconds (default: 30000) |
+
+### Inputs
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `msg.to` | string \| string[] | Recipient phone number(s) in E.164 format |
+| `msg.body` | string | SMS message text |
+| `msg.payload` | string | *(Fallback)* Used as body if `msg.body` is not set |
+
+### Outputs
+
+| Output | When | Properties |
+|--------|------|------------|
+| **1 - Success** | HTTP 200 | `msg.message_id`, `msg.twilio_sid`, `msg.payload.segment_count`, `msg.statusCode` |
+| **2 - Error** | API/network error | `msg.payload.error`, `msg.payload.code`, `msg.statusCode` |
+
+### Phone Number Format
+
+Phone numbers must be in **E.164 format**: `+` followed by country code and number.
+
+- Australia: `+61412345678` (drop the leading 0)
+- US/Canada: `+12025551234`
+- UK: `+447911123456`
+
+### Status Codes
+
+| Code | Meaning |
+|------|---------|
+| 200 | SMS sent successfully |
+| 400 | Bad request (missing fields, invalid phone, message too long) |
+| 401 | Invalid API key |
+| 403 | Service not enabled or missing scope |
+| 429 | Daily SMS limit reached |
+| 503 | SMS not configured (Twilio credentials missing) |
 
 ---
 
@@ -299,7 +349,7 @@ Copy the JSON below and import into Node-RED: **Menu → Import → Clipboard**
         "server": "",
         "filename": "",
         "timeout": "30000",
-        "apiUrl": "https://files.processlink.com.au/api/upload",
+        "apiUrl": "https://files.processlink.com.au/api/v1/sites/{siteId}/files/upload",
         "x": 470,
         "y": 100,
         "wires": [["pl-debug-success"], ["pl-debug-error"]]

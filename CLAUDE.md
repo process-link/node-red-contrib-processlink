@@ -50,6 +50,12 @@ nodes/
   files/
     processlink-files-upload.js   # File upload node
     processlink-files-upload.html
+  mail/
+    processlink-mail.js      # Email send node
+    processlink-mail.html
+  sms/
+    processlink-sms.js       # SMS send node
+    processlink-sms.html
   system/
     processlink-system-info.js    # System info node
     processlink-system-info.html

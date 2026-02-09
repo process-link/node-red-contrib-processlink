@@ -13,8 +13,9 @@
       bcc: { value: "" },
       replyTo: { value: "" },
       useTemplate: { value: true },
+      linkOnly: { value: false },
       timeout: { value: "30000" },
-      apiUrl: { value: "https://processmail.processlink.com.au/api/send" },
+      apiUrl: { value: "https://processmail.processlink.com.au/api/send-email" },
     },
     inputs: 1,
     outputs: 2,
@@ -46,11 +47,11 @@
   </div>
   <div class="form-row">
     <label for="node-input-subject"><i class="fa fa-header"></i> Subject</label>
-    <input type="text" id="node-input-subject" placeholder="msg.subject or msg.topic" />
+    <input type="text" id="node-input-subject" placeholder="msg.subject" />
   </div>
   <div class="form-row">
     <label for="node-input-body"><i class="fa fa-file-text-o"></i> Body</label>
-    <input type="text" id="node-input-body" placeholder="msg.payload (default)" />
+    <input type="text" id="node-input-body" placeholder="msg.body (optional - has default)" />
   </div>
   <div class="form-row">
     <label for="node-input-bodyType"><i class="fa fa-code"></i> Body Type</label>
@@ -77,6 +78,11 @@
     <span>Use branded email template</span>
   </div>
   <div class="form-row">
+    <label for="node-input-linkOnly">&nbsp;</label>
+    <input type="checkbox" id="node-input-linkOnly" style="width: auto; margin-right: 10px;">
+    <span>Link only (don't attach files)</span>
+  </div>
+  <div class="form-row">
     <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
     <input type="text" id="node-input-timeout" placeholder="30000" />
     <span style="margin-left: 5px; color: #888">ms</span>
@@ -96,10 +102,10 @@
     <dd>Recipient email address(es). Can be set in config or via <code>msg.to</code>.</dd>
 
     <dt>subject <span class="property-type">string</span></dt>
-    <dd>Email subject. Can be set in config or via <code>msg.subject</code> or <code>msg.topic</code>.</dd>
+    <dd>Email subject. Can be set in config or via <code>msg.subject</code>.</dd>
 
-    <dt>payload <span class="property-type">string</span></dt>
-    <dd>Email body content. Uses <code>msg.payload</code> by default, or the config Body field.</dd>
+    <dt>body <span class="property-type">string</span></dt>
+    <dd>Email body content via <code>msg.body</code>. Defaults to a notification message if not provided.</dd>
 
     <dt class="optional">bodyType <span class="property-type">string</span></dt>
     <dd>"text" (default) or "html". Can be set in config or via <code>msg.bodyType</code>.</dd>
@@ -118,6 +124,9 @@
 
     <dt class="optional">attachments <span class="property-type">array</span></dt>
     <dd>Multiple file attachments. Format: <code>[{ fileId: "uuid" }]</code>. Takes priority over <code>file_id</code>.</dd>
+
+    <dt class="optional">linkOnly <span class="property-type">boolean</span></dt>
+    <dd>When <code>true</code>, files are not attached - only links are included. Useful for large files.</dd>
   </dl>
 
   <h3>Outputs</h3>
@@ -155,7 +164,7 @@
   <dl class="message-properties">
     <dt>To / Subject / Body</dt>
     <dd>Set default values here, or leave blank to use message properties.
-    Config values take priority over message values.</dd>
+    Config values take priority over <code>msg</code> properties. Body has a default if not set.</dd>
     <dt>Body Type</dt>
     <dd>Select "Plain Text" or "HTML" format.</dd>
     <dt>CC / BCC / Reply-To</dt>
@@ -163,6 +172,10 @@
     <dt>Use branded email template</dt>
     <dd>When enabled (default), wraps emails in a professional template with your organization name,
     ProcessLink branding, and clickable links to any attached files. Disable for raw email content.</dd>
+    <dt>Link only (don't attach files)</dt>
+    <dd>When enabled, files are not attached to the email. Instead, only links to the files
+    are included in the email body/template. Useful for large files that would exceed email size limits.
+    Can also be set via <code>msg.linkOnly</code>.</dd>
     <dt>Timeout</dt>
     <dd>Request timeout in ms. Default: 30000.</dd>
   </dl>
@@ -189,17 +202,25 @@ msg.attachments = flow.get("uploadedFiles");
 flow.set("uploadedFiles", []); // Clear for next run
 return msg;</pre>
 
+  <h4>Link Only (Large Files)</h4>
+  <p>For large files that would exceed email size limits, enable "Link only" in the config
+  or set <code>msg.linkOnly = true</code>. The email will include clickable links to the files
+  instead of attaching them directly.</p>
+  <pre>// Send link instead of attachment for large files
+msg.linkOnly = true;
+return msg;</pre>
+
   <h3>Examples</h3>
   <h4>Simple Text Email</h4>
   <pre>msg.to = "user@example.com";
 msg.subject = "Alert: System Down";
-msg.payload = "The production line has stopped.";
+msg.body = "The production line has stopped.";
 return msg;</pre>
 
   <h4>HTML Email</h4>
   <pre>msg.to = ["manager@example.com", "ops@example.com"];
 msg.subject = "Daily Report";
-msg.payload = "&lt;h1&gt;Report&lt;/h1&gt;&lt;p&gt;All systems normal.&lt;/p&gt;";
+msg.body = "&lt;h1&gt;Report&lt;/h1&gt;&lt;p&gt;All systems normal.&lt;/p&gt;";
 msg.bodyType = "html";
 return msg;</pre>
 

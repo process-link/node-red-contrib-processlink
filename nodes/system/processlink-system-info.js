@@ -5,7 +5,9 @@
 
 module.exports = function (RED) {
   const os = require("os");
-  const { execSync } = require("child_process");
+  const { exec } = require("child_process");
+  const util = require("util");
+  const execAsync = util.promisify(exec);
 
   /**
    * Format bytes to human-readable string
@@ -72,20 +74,21 @@ module.exports = function (RED) {
 
   /**
    * Get disk space information (cross-platform)
-   * @returns {object|null}
+   * Uses async exec to avoid blocking the event loop
+   * @returns {Promise<object|null>}
    */
-  function getDiskInfo() {
+  async function getDiskInfo() {
     try {
       const platform = os.platform();
       let total, free, used;
 
       if (platform === "win32") {
         // Windows: use wmic
-        const output = execSync("wmic logicaldisk where drivetype=3 get size,freespace", {
-          encoding: "utf8",
-          timeout: 5000,
-        });
-        const lines = output.trim().split("\n").filter((l) => l.trim());
+        const { stdout } = await execAsync(
+          "wmic logicaldisk where drivetype=3 get size,freespace",
+          { timeout: 5000 }
+        );
+        const lines = stdout.trim().split("\n").filter((l) => l.trim());
         if (lines.length > 1) {
           // Sum all drives
           total = 0;
@@ -101,11 +104,8 @@ module.exports = function (RED) {
         }
       } else {
         // Linux/Mac: use df
-        const output = execSync("df -B1 / | tail -1", {
-          encoding: "utf8",
-          timeout: 5000,
-        });
-        const parts = output.trim().split(/\s+/);
+        const { stdout } = await execAsync("df -B1 / | tail -1", { timeout: 5000 });
+        const parts = stdout.trim().split(/\s+/);
         if (parts.length >= 4) {
           total = parseInt(parts[1]) || 0;
           used = parseInt(parts[2]) || 0;
@@ -151,9 +151,9 @@ module.exports = function (RED) {
   /**
    * Collect all system information
    * @param {number} nodeRedStartTime - timestamp when Node-RED started
-   * @returns {object}
+   * @returns {Promise<object>}
    */
-  function collectSystemInfo(nodeRedStartTime) {
+  async function collectSystemInfo(nodeRedStartTime) {
     const now = new Date();
     const totalMem = os.totalmem();
     const freeMem = os.freemem();
@@ -161,7 +161,7 @@ module.exports = function (RED) {
     const cpus = os.cpus();
     const processMemory = process.memoryUsage();
     const networkInfo = getNetworkInfo();
-    const diskInfo = getDiskInfo();
+    const diskInfo = await getDiskInfo();
 
     // Calculate Node-RED uptime
     const nodeRedUptimeSeconds = (Date.now() - nodeRedStartTime) / 1000;
@@ -247,19 +247,25 @@ module.exports = function (RED) {
     // Send on deploy if enabled
     if (config.sendOnDeploy) {
       // Small delay to let Node-RED fully initialize
-      setTimeout(() => {
-        const info = collectSystemInfo(nodeRedStartTime);
-        node.send({ payload: info });
-        node.status({
-          fill: "green",
-          shape: "dot",
-          text: `sent @ ${new Date().toLocaleTimeString()}`,
-        });
-        setTimeout(() => node.status({}), 5000);
+      setTimeout(async () => {
+        try {
+          const info = await collectSystemInfo(nodeRedStartTime);
+          node.send({ payload: info });
+          node.status({
+            fill: "green",
+            shape: "dot",
+            text: `sent @ ${new Date().toLocaleTimeString()}`,
+          });
+          setTimeout(() => node.status({}), 5000);
+        } catch (err) {
+          node.status({ fill: "red", shape: "ring", text: "error" });
+          node.error(err);
+          setTimeout(() => node.status({}), 10000);
+        }
       }, 1000);
     }
 
-    node.on("input", function (msg, send, done) {
+    node.on("input", async function (msg, send, done) {
       // For Node-RED 0.x compatibility
       send = send || function () { node.send.apply(node, arguments); };
       done = done || function (err) { if (err) node.error(err, msg); };
@@ -267,7 +273,7 @@ module.exports = function (RED) {
       try {
         node.status({ fill: "yellow", shape: "dot", text: "collecting..." });
 
-        const info = collectSystemInfo(nodeRedStartTime);
+        const info = await collectSystemInfo(nodeRedStartTime);
         msg.payload = info;
 
         node.status({

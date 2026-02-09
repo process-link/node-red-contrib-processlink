@@ -3,8 +3,8 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.4.0",
-  "description": "Node-RED nodes for Process Link platform integration - upload files, send notifications, and connect to industrial automation systems",
+  "version": "1.7.0",
+  "description": "Node-RED nodes for Process Link platform integration - upload files, send emails, send SMS alerts, and connect to industrial automation systems",
   "keywords": [
     "node-red",
     "processlink",
@@ -20,7 +20,11 @@
     "plc",
     "system-info",
     "diagnostics",
-    "monitoring"
+    "monitoring",
+    "sms",
+    "twilio",
+    "alerts",
+    "notifications"
   ],
   "node-red": {
     "version": ">=2.0.0",
@@ -28,11 +32,19 @@
       "processlink-config": "nodes/config/processlink-config.js",
       "processlink-files-upload": "nodes/files/processlink-files-upload.js",
       "processlink-system-info": "nodes/system/processlink-system-info.js",
-      "processlink-mail": "nodes/mail/processlink-mail.js"
+      "processlink-mail": "nodes/mail/processlink-mail.js",
+      "processlink-sms": "nodes/sms/processlink-sms.js"
     }
   },
   "scripts": {
-    "test": "echo \"No tests yet\" && exit 0"
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "prepublishOnly": "npm test"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "node-red": "^3.1.0",
+    "node-red-node-test-helper": "^0.3.3"
   },
   "author": {
     "name": "Process Link",

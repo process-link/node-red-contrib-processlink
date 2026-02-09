@@ -6,6 +6,20 @@
 module.exports = function (RED) {
   const https = require("https");
 
+  // Allowed hosts for redirect validation (SSRF prevention)
+  const ALLOWED_HOSTS = [
+    "files.processlink.com.au",
+    "processlink.com.au",
+    "processmail.processlink.com.au",
+    "portal.processlink.com.au"
+  ];
+
+  // Request timeout in milliseconds
+  const REQUEST_TIMEOUT = 10000;
+
+  // Overall timeout for parallel requests (prevents indefinite hangs)
+  const OVERALL_TIMEOUT = 15000;
+
   // Helper to make HTTPS request that follows redirects
   function httpsGet(options, callback) {
     const req = https.request(options, (res) => {
@@ -15,8 +29,12 @@ module.exports = function (RED) {
         let redirectOptions;
 
         if (location.startsWith("http")) {
-          // Absolute URL
+          // Absolute URL - validate hostname to prevent SSRF
           const redirectUrl = new URL(location);
+          if (!ALLOWED_HOSTS.includes(redirectUrl.hostname)) {
+            callback(null, new Error(`Redirect to untrusted domain blocked: ${redirectUrl.hostname}`));
+            return;
+          }
           redirectOptions = {
             hostname: redirectUrl.hostname,
             path: redirectUrl.pathname + redirectUrl.search,
@@ -41,6 +59,10 @@ module.exports = function (RED) {
     });
     req.on("error", (err) => {
       callback(null, err);
+    });
+    req.setTimeout(REQUEST_TIMEOUT, () => {
+      req.destroy();
+      callback(null, new Error("Request timeout"));
     });
     req.end();
   }
@@ -82,10 +104,21 @@ module.exports = function (RED) {
     let foldersData = [];
     let completed = 0;
     let hasError = false;
+    let hasTimedOut = false;
+
+    // Overall timeout to prevent indefinite hangs if both requests are slow
+    const overallTimeout = setTimeout(() => {
+      if (!hasError && !hasTimedOut) {
+        hasTimedOut = true;
+        console.log(`[ProcessLink] Overall timeout reached for locations request`);
+        res.status(504).json({ error: "Request timed out" });
+      }
+    }, OVERALL_TIMEOUT);
 
     function checkComplete() {
       completed++;
-      if (completed === 2 && !hasError) {
+      if (completed === 2 && !hasError && !hasTimedOut) {
+        clearTimeout(overallTimeout);
         res.json({ areas: areasData, folders: foldersData });
       }
     }
@@ -99,10 +132,12 @@ module.exports = function (RED) {
         headers: headers,
       },
       (areasRes, err) => {
+        if (hasTimedOut) return;
         if (err) {
           console.log(`[ProcessLink] Areas request error:`, err.message);
-          if (!hasError) {
+          if (!hasError && !hasTimedOut) {
             hasError = true;
+            clearTimeout(overallTimeout);
             res.status(500).json({ error: "Failed to fetch areas" });
           }
           return;
@@ -139,10 +174,12 @@ module.exports = function (RED) {
         headers: headers,
       },
       (foldersRes, err) => {
+        if (hasTimedOut) return;
         if (err) {
           console.log(`[ProcessLink] Folders request error:`, err.message);
-          if (!hasError) {
+          if (!hasError && !hasTimedOut) {
             hasError = true;
+            clearTimeout(overallTimeout);
             res.status(500).json({ error: "Failed to fetch folders" });
           }
           return;

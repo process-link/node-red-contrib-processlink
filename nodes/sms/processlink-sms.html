@@ -1,0 +1,167 @@
+<script type="text/javascript">
+  RED.nodes.registerType("processlink-sms", {
+    category: "Process Link",
+    color: "#f97316",
+    defaults: {
+      name: { value: "" },
+      server: { value: "", type: "processlink-config", required: true },
+      to: { value: "" },
+      body: { value: "" },
+      timeout: { value: "30000" },
+      apiUrl: { value: "https://processmail.processlink.com.au/api/send-sms" },
+    },
+    inputs: 1,
+    outputs: 2,
+    icon: "processlink.png",
+    paletteLabel: "send SMS",
+    label: function () {
+      return this.name || "send SMS";
+    },
+    labelStyle: function () {
+      return this.name ? "node_label_italic" : "";
+    },
+    inputLabels: "SMS data",
+    outputLabels: ["success", "error"],
+  });
+</script>
+
+<script type="text/html" data-template-name="processlink-sms">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-server"><i class="fa fa-server"></i> Config</label>
+    <input type="text" id="node-input-server" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-to"><i class="fa fa-phone"></i> To</label>
+    <input type="text" id="node-input-to" placeholder="msg.to (e.g., +61412345678)" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-body"><i class="fa fa-comment"></i> Body</label>
+    <input type="text" id="node-input-body" placeholder="msg.body or msg.payload" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
+    <input type="text" id="node-input-timeout" placeholder="30000" />
+    <span style="margin-left: 5px; color: #888">ms</span>
+  </div>
+  <div class="form-row" style="display: none">
+    <label for="node-input-apiUrl"><i class="fa fa-link"></i> API URL</label>
+    <input type="text" id="node-input-apiUrl" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="processlink-sms">
+  <p>Sends SMS messages via the ProcessMail API using Twilio.</p>
+
+  <h3>Inputs</h3>
+  <dl class="message-properties">
+    <dt>to <span class="property-type">string | string[]</span></dt>
+    <dd>Recipient phone number(s) in E.164 format (e.g., <code>+61412345678</code>).
+    Can be set in config or via <code>msg.to</code>.</dd>
+
+    <dt>body <span class="property-type">string</span></dt>
+    <dd>SMS message text via <code>msg.body</code> or <code>msg.payload</code> (if string).
+    Config body takes priority.</dd>
+  </dl>
+
+  <h3>Outputs</h3>
+  <p>This node has two outputs:</p>
+  <ol>
+    <li><strong>Success</strong> - SMS sent successfully (HTTP 200)</li>
+    <li><strong>Error</strong> - SMS failed to send (network error, API error, or timeout)</li>
+  </ol>
+
+  <h4>Success Output</h4>
+  <dl class="message-properties">
+    <dt>payload.ok <span class="property-type">boolean</span></dt>
+    <dd><code>true</code></dd>
+    <dt>payload.message_id <span class="property-type">string</span></dt>
+    <dd>ProcessMail message log ID.</dd>
+    <dt>payload.twilio_sid <span class="property-type">string</span></dt>
+    <dd>Twilio message SID for tracking.</dd>
+    <dt>payload.segment_count <span class="property-type">number</span></dt>
+    <dd>Number of SMS segments used.</dd>
+    <dt>message_id <span class="property-type">string</span></dt>
+    <dd>Same as above (convenience property).</dd>
+    <dt>twilio_sid <span class="property-type">string</span></dt>
+    <dd>Same as above (convenience property).</dd>
+    <dt>statusCode <span class="property-type">number</span></dt>
+    <dd>200</dd>
+  </dl>
+
+  <h4>Error Output</h4>
+  <dl class="message-properties">
+    <dt>payload.error <span class="property-type">string</span></dt>
+    <dd>Error message from the API or network layer.</dd>
+    <dt>payload.code <span class="property-type">string</span></dt>
+    <dd>Error code: MISSING_FIELDS, INVALID_PHONE_NUMBER, SMS_NOT_CONFIGURED,
+    MESSAGE_TOO_LONG, RATE_LIMIT_EXCEEDED, SEND_FAILED, etc.</dd>
+    <dt>statusCode <span class="property-type">number</span></dt>
+    <dd>HTTP status code, or 0 for network/timeout errors.</dd>
+  </dl>
+
+  <h3>Configuration</h3>
+  <dl class="message-properties">
+    <dt>To</dt>
+    <dd>Default recipient phone number in E.164 format (<code>+</code> followed by country code and number).
+    Leave blank to use <code>msg.to</code>. Config takes priority.</dd>
+    <dt>Body</dt>
+    <dd>Default message text. Leave blank to use <code>msg.body</code> or <code>msg.payload</code>.</dd>
+    <dt>Timeout</dt>
+    <dd>Request timeout in ms. Default: 30000.</dd>
+  </dl>
+
+  <h3>Phone Number Format</h3>
+  <p>Phone numbers must be in <strong>E.164 format</strong>: <code>+</code> followed by country code and number.</p>
+  <ul>
+    <li>Australia: <code>+61412345678</code> (drop the leading 0)</li>
+    <li>US/Canada: <code>+12025551234</code></li>
+    <li>UK: <code>+447911123456</code></li>
+    <li>New Zealand: <code>+64211234567</code></li>
+  </ul>
+
+  <h3>SMS Segments</h3>
+  <p>SMS messages are split into segments based on content:</p>
+  <ul>
+    <li><strong>Standard text (GSM-7):</strong> 160 chars per segment, 153 for multi-part</li>
+    <li><strong>Unicode (emojis, non-Latin):</strong> 70 chars per segment, 67 for multi-part</li>
+  </ul>
+  <p>Each segment counts as one SMS for billing purposes.</p>
+
+  <h3>Examples</h3>
+  <h4>Simple Alert</h4>
+  <pre>msg.to = "+61412345678";
+msg.body = "ALERT: Temperature exceeded 85C on Line 3";
+return msg;</pre>
+
+  <h4>Multi-Recipient Broadcast</h4>
+  <pre>msg.to = ["+61412345678", "+61423456789"];
+msg.body = "Shift change reminder: Next shift starts at 14:00";
+return msg;</pre>
+
+  <h4>Using msg.payload</h4>
+  <pre>// If msg.payload is a string, it will be used as the SMS body
+msg.to = "+61412345678";
+msg.payload = "Equipment maintenance due tomorrow";
+return msg;</pre>
+
+  <h3>Status Codes</h3>
+  <ul>
+    <li><strong>200</strong> - SMS sent successfully</li>
+    <li><strong>400</strong> - Bad request (missing fields, invalid phone number, message too long)</li>
+    <li><strong>401</strong> - Invalid API key</li>
+    <li><strong>403</strong> - Service not enabled or missing scope</li>
+    <li><strong>429</strong> - Daily SMS limit reached</li>
+    <li><strong>500</strong> - Server error</li>
+    <li><strong>503</strong> - SMS not configured (Twilio credentials missing)</li>
+  </ul>
+
+  <h3>References</h3>
+  <ul>
+    <li><a href="https://portal.processlink.com.au" target="_blank">Process Link Portal</a></li>
+    <li><a href="https://github.com/process-link/node-red-contrib-processlink" target="_blank">GitHub</a></li>
+  </ul>
+</script>

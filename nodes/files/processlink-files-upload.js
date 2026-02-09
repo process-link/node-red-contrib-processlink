@@ -7,6 +7,21 @@ module.exports = function (RED) {
   const https = require("https");
   const http = require("http");
 
+  // Maximum file size: 100 MB
+  const MAX_FILE_SIZE = 100 * 1024 * 1024;
+
+  /**
+   * Sanitize filename for Content-Disposition header
+   * Prevents injection attacks via malicious filenames
+   */
+  function sanitizeFilename(filename) {
+    return filename
+      .replace(/[/\\]/g, "_")        // Remove path separators
+      .replace(/"/g, '\\"')          // Escape quotes
+      .replace(/[\x00-\x1f\x7f]/g, "") // Remove control characters
+      .substring(0, 255);            // Limit length
+  }
+
   function ProcessLinkFilesUploadNode(config) {
     RED.nodes.createNode(this, config);
     const node = this;
@@ -53,6 +68,13 @@ module.exports = function (RED) {
         return;
       }
 
+      // Check file size limit
+      if (fileBuffer.length > MAX_FILE_SIZE) {
+        node.status({ fill: "red", shape: "ring", text: "file too large" });
+        done(new Error(`File exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`));
+        return;
+      }
+
       // Get filename (config takes priority over msg.filename)
       // If config filename has no extension, inherit from msg.filename
       let basename;
@@ -87,10 +109,10 @@ module.exports = function (RED) {
       const boundary = "----NodeREDProcessLink" + Date.now() + Math.random().toString(36).substring(2);
       const parts = [];
 
-      // Add file part
+      // Add file part (sanitize filename to prevent header injection)
       parts.push(Buffer.from(
         `--${boundary}\r\n` +
-        `Content-Disposition: form-data; name="file"; filename="${basename}"\r\n` +
+        `Content-Disposition: form-data; name="file"; filename="${sanitizeFilename(basename)}"\r\n` +
         `Content-Type: application/octet-stream\r\n\r\n`
       ));
       parts.push(fileBuffer);
@@ -118,8 +140,10 @@ module.exports = function (RED) {
 
       const body = Buffer.concat(parts);
 
-      // Parse URL
-      const apiUrl = config.apiUrl || "https://files.processlink.com.au/api/upload";
+      // Build API URL with siteId in path
+      const apiUrl = (config.apiUrl || "https://files.processlink.com.au/api/v1/sites/{siteId}/files/upload")
+        .replace("{siteId}", siteId);
+
       const url = new URL(apiUrl);
       const isHttps = url.protocol === "https:";
 
@@ -131,7 +155,6 @@ module.exports = function (RED) {
         headers: {
           "Content-Type": `multipart/form-data; boundary=${boundary}`,
           "Content-Length": body.length,
-          "x-site-id": siteId,
           "Authorization": `Bearer ${apiKey}`,
         },
       };

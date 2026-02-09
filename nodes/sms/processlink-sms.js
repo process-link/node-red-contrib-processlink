@@ -1,13 +1,13 @@
 /**
- * Process Link Mail Node
- * Sends emails via the ProcessMail API
+ * Process Link SMS Node
+ * Sends SMS messages via the ProcessMail API
  */
 
 module.exports = function (RED) {
   const https = require("https");
   const http = require("http");
 
-  function ProcessLinkMailNode(config) {
+  function ProcessLinkSmsNode(config) {
     RED.nodes.createNode(this, config);
     const node = this;
 
@@ -34,73 +34,47 @@ module.exports = function (RED) {
         return;
       }
 
-      // Get email data from config or msg (config takes priority)
+      // Get SMS data from config or msg (config takes priority)
       const to = config.to || msg.to;
-      const subject = config.subject || msg.subject;
-      // Email body: config.body takes priority, then msg.body, then default
-      const body = config.body || msg.body || "You have a new notification from ProcessMail.";
-      const bodyType = config.bodyType || msg.bodyType || "text";
-
-      // Optional fields
-      const cc = config.cc || msg.cc;
-      const bcc = config.bcc || msg.bcc;
-      const replyTo = config.replyTo || msg.replyTo;
-      // Support both msg.attachments array and direct msg.file_id from upload node
-      let attachments = msg.attachments;
-      if (!attachments && msg.file_id) {
-        // Auto-convert single file_id to attachments array for direct upload→mail connection
-        attachments = [{ fileId: msg.file_id }];
-      }
+      // SMS body: config.body takes priority, then msg.body, then msg.payload
+      const body = config.body || msg.body || (typeof msg.payload === "string" ? msg.payload : "");
 
       // Validate required fields
       if (!to) {
         node.status({ fill: "red", shape: "ring", text: "missing 'to'" });
-        msg.payload = { error: "Missing required field: to" };
+        msg.payload = { error: "Missing required field: to (phone number)" };
         send([null, msg]);
         done(new Error("Missing required field: to"));
         return;
       }
-      if (!subject) {
-        node.status({ fill: "red", shape: "ring", text: "missing subject" });
-        msg.payload = { error: "Missing required field: subject" };
+      if (!body) {
+        node.status({ fill: "red", shape: "ring", text: "missing body" });
+        msg.payload = { error: "Missing required field: body (message text)" };
         send([null, msg]);
-        done(new Error("Missing required field: subject"));
+        done(new Error("Missing required field: body"));
         return;
       }
-      // Body now has a default, so no validation needed
 
-      // Template option (default: true for branded email template)
-      const useTemplate = config.useTemplate !== false && msg.useTemplate !== false;
-
-      // Link only option (default: false - attach files normally)
-      const linkOnly = config.linkOnly === true || msg.linkOnly === true;
+      // Basic phone number validation
+      const phoneStr = Array.isArray(to) ? to[0] : to;
+      if (typeof phoneStr === "string" && !phoneStr.startsWith("+")) {
+        node.status({ fill: "red", shape: "ring", text: "invalid phone" });
+        msg.payload = { error: "Phone number must start with '+' (E.164 format, e.g., +61412345678)" };
+        send([null, msg]);
+        done(new Error("Invalid phone number format"));
+        return;
+      }
 
       // Build request body
       const requestBody = {
         to: to,
-        subject: subject,
         body: body,
-        bodyType: bodyType,
-        useTemplate: useTemplate,
       };
-
-      if (cc) requestBody.cc = cc;
-      if (bcc) requestBody.bcc = bcc;
-      if (replyTo) requestBody.replyTo = replyTo;
-      if (attachments && Array.isArray(attachments) && attachments.length > 0) {
-        if (linkOnly) {
-          // Send as file links only (no attachment) - useful for large files
-          requestBody.fileLinks = attachments;
-        } else {
-          // Attach files to email
-          requestBody.attachments = attachments;
-        }
-      }
 
       const bodyString = JSON.stringify(requestBody);
 
       // Parse URL
-      const apiUrl = config.apiUrl || "https://processmail.processlink.com.au/api/v1/send-email";
+      const apiUrl = config.apiUrl || "https://processmail.processlink.com.au/api/v1/send-sms";
       const url = new URL(apiUrl);
       const isHttps = url.protocol === "https:";
 
@@ -118,6 +92,9 @@ module.exports = function (RED) {
 
       // Show recipient in status
       const recipientLabel = Array.isArray(to) ? to[0] : to;
+      const shortPhone = recipientLabel.length > 10
+        ? recipientLabel.slice(0, 4) + "..." + recipientLabel.slice(-4)
+        : recipientLabel;
       node.status({ fill: "yellow", shape: "dot", text: "sending..." });
 
       const transport = isHttps ? https : http;
@@ -139,25 +116,25 @@ module.exports = function (RED) {
           msg.statusCode = res.statusCode;
 
           if (res.statusCode === 200 && parsedResponse.ok) {
-            // Success - send to output 1 with clean payload
+            // Success - send to output 1
             msg.payload = {
               ok: true,
               status: parsedResponse.status || "sent",
-              email_id: parsedResponse.email_id,
-              resend_id: parsedResponse.resend_id,
-              attachments_count: parsedResponse.attachments_count || 0,
+              message_id: parsedResponse.message_id,
+              twilio_sid: parsedResponse.twilio_sid,
+              segment_count: parsedResponse.segment_count || 1,
+              recipients_count: parsedResponse.recipients_count || 1,
             };
-            // Include warning if logging failed on server
             if (parsedResponse.log_warning) {
               msg.payload.log_warning = parsedResponse.log_warning;
             }
-            // Convenience properties for easy wiring
-            msg.email_id = parsedResponse.email_id;
-            msg.resend_id = parsedResponse.resend_id;
+            // Convenience properties
+            msg.message_id = parsedResponse.message_id;
+            msg.twilio_sid = parsedResponse.twilio_sid;
             node.status({
               fill: "green",
               shape: "dot",
-              text: "sent to " + recipientLabel,
+              text: "sent to " + shortPhone,
             });
             send([msg, null]);
             done();
@@ -215,5 +192,5 @@ module.exports = function (RED) {
     });
   }
 
-  RED.nodes.registerType("processlink-mail", ProcessLinkMailNode);
+  RED.nodes.registerType("processlink-sms", ProcessLinkSmsNode);
 };
