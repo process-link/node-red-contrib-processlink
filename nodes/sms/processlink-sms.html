@@ -40,7 +40,7 @@
   </div>
   <div class="form-row">
     <label for="node-input-body"><i class="fa fa-comment"></i> Body</label>
-    <input type="text" id="node-input-body" placeholder="msg.body or msg.payload" />
+    <input type="text" id="node-input-body" placeholder="msg.body" />
   </div>
   <div class="form-row">
     <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
@@ -63,8 +63,7 @@
     Can be set in config or via <code>msg.to</code>.</dd>
 
     <dt>body <span class="property-type">string</span></dt>
-    <dd>SMS message text via <code>msg.body</code> or <code>msg.payload</code> (if string).
-    Config body takes priority.</dd>
+    <dd>SMS message text via <code>msg.body</code>. Config body takes priority.</dd>
   </dl>
 
   <h3>Outputs</h3>
@@ -109,7 +108,7 @@
     <dd>Default recipient phone number in E.164 format (<code>+</code> followed by country code and number).
     Leave blank to use <code>msg.to</code>. Config takes priority.</dd>
     <dt>Body</dt>
-    <dd>Default message text. Leave blank to use <code>msg.body</code> or <code>msg.payload</code>.</dd>
+    <dd>Default message text. Leave blank to use <code>msg.body</code>.</dd>
     <dt>Timeout</dt>
     <dd>Request timeout in ms. Default: 30000.</dd>
   </dl>
@@ -142,10 +141,9 @@ return msg;</pre>
 msg.body = "Shift change reminder: Next shift starts at 14:00";
 return msg;</pre>
 
-  <h4>Using msg.payload</h4>
-  <pre>// If msg.payload is a string, it will be used as the SMS body
-msg.to = "+61412345678";
-msg.payload = "Equipment maintenance due tomorrow";
+  <h4>Dynamic Message</h4>
+  <pre>msg.to = "+61412345678";
+msg.body = "Equipment maintenance due tomorrow";
 return msg;</pre>
 
   <h3>Status Codes</h3>

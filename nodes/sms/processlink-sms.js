@@ -36,8 +36,7 @@ module.exports = function (RED) {
 
       // Get SMS data from config or msg (config takes priority)
       const to = config.to || msg.to;
-      // SMS body: config.body takes priority, then msg.body, then msg.payload
-      const body = config.body || msg.body || (typeof msg.payload === "string" ? msg.payload : "");
+      const body = config.body || msg.body;
 
       // Validate required fields
       if (!to) {

@@ -246,7 +246,7 @@
         "folderId": "",
         "timestampPrefix": true,
         "timeout": "30000",
-        "apiUrl": "https://files.processlink.com.au/api/upload",
+        "apiUrl": "https://files.processlink.com.au/api/v1/sites/{siteId}/files/upload",
         "x": 540,
         "y": 440,
         "wires": [
@@ -358,7 +358,7 @@
         "folderId": "",
         "timestampPrefix": true,
         "timeout": "30000",
-        "apiUrl": "https://files.processlink.com.au/api/upload",
+        "apiUrl": "https://files.processlink.com.au/api/v1/sites/{siteId}/files/upload",
         "x": 540,
         "y": 600,
         "wires": [
@@ -386,7 +386,7 @@
         "replyTo": "",
         "useTemplate": true,
         "timeout": "30000",
-        "apiUrl": "https://processmail.processlink.com.au/api/send-email",
+        "apiUrl": "https://processmail.processlink.com.au/api/v1/send-email",
         "x": 850,
         "y": 600,
         "wires": [
@@ -521,7 +521,7 @@
         "replyTo": "",
         "useTemplate": true,
         "timeout": "30000",
-        "apiUrl": "https://processmail.processlink.com.au/api/send-email",
+        "apiUrl": "https://processmail.processlink.com.au/api/v1/send-email",
         "x": 510,
         "y": 1060,
         "wires": [
@@ -663,7 +663,7 @@
         "folderId": "",
         "timestampPrefix": true,
         "timeout": "30000",
-        "apiUrl": "https://files.processlink.com.au/api/upload",
+        "apiUrl": "https://files.processlink.com.au/api/v1/sites/{siteId}/files/upload",
         "x": 540,
         "y": 840,
         "wires": [
@@ -692,7 +692,7 @@
         "useTemplate": true,
         "linkOnly": true,
         "timeout": "30000",
-        "apiUrl": "https://processmail.processlink.com.au/api/send-email",
+        "apiUrl": "https://processmail.processlink.com.au/api/v1/send-email",
         "x": 780,
         "y": 840,
         "wires": [
@@ -821,7 +821,7 @@
         "to": "",
         "body": "",
         "timeout": "30000",
-        "apiUrl": "https://processmail.processlink.com.au/api/send-sms",
+        "apiUrl": "https://processmail.processlink.com.au/api/v1/send-sms",
         "x": 370,
         "y": 1260,
         "wires": [
@@ -871,7 +871,7 @@
         "id": "sms_inject_payload_7",
         "type": "inject",
         "z": "e453f86ed59b6b3d",
-        "name": "SMS via payload",
+        "name": "SMS via msg.body",
         "props": [
             {
                 "p": "to",
@@ -879,7 +879,7 @@
                 "vt": "str"
             },
             {
-                "p": "payload",
+                "p": "body",
                 "v": "Equipment maintenance due tomorrow",
                 "vt": "str"
             }
