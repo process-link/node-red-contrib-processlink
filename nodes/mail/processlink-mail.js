@@ -44,7 +44,12 @@ module.exports = function (RED) {
       const cc = config.cc || msg.cc;
       const bcc = config.bcc || msg.bcc;
       const replyTo = config.replyTo || msg.replyTo;
-      const attachments = msg.attachments; // Array of { fileId: "uuid" }
+      // Support both msg.attachments array and direct msg.file_id from upload node
+      let attachments = msg.attachments;
+      if (!attachments && msg.file_id) {
+        // Auto-convert single file_id to attachments array for direct upload→mail connection
+        attachments = [{ fileId: msg.file_id }];
+      }
 
       // Validate required fields
       if (!to) {

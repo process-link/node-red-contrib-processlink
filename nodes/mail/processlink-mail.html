@@ -107,8 +107,11 @@
     <dt class="optional">replyTo <span class="property-type">string</span></dt>
     <dd>Reply-To address. Via config or <code>msg.replyTo</code>.</dd>
 
+    <dt class="optional">file_id <span class="property-type">string</span></dt>
+    <dd>Single file attachment from the upload node. Automatically converted to attachment.</dd>
+
     <dt class="optional">attachments <span class="property-type">array</span></dt>
-    <dd>File attachments from ProcessLink Files. Format: <code>[{ fileId: "uuid" }]</code></dd>
+    <dd>Multiple file attachments. Format: <code>[{ fileId: "uuid" }]</code>. Takes priority over <code>file_id</code>.</dd>
   </dl>
 
   <h3>Outputs</h3>
@@ -157,28 +160,25 @@
 
   <h3>File Attachments</h3>
   <p>To send emails with file attachments, first upload the file using the
-  <code>processlink-files-upload</code> node, then pass the file ID to this node.</p>
+  <code>processlink-files-upload</code> node, then connect it to this node.</p>
 
-  <h4>Typical Flow</h4>
-  <pre>[file-in] → [upload] → [function] → [send email]</pre>
-
-  <h4>Example: Email a Report</h4>
-  <p>After the upload node, use a function node to prepare the email:</p>
-  <pre>// The upload node sets msg.file_id
-msg.attachments = [{ fileId: msg.file_id }];
-msg.to = "manager@example.com";
-msg.subject = "Daily Report - " + new Date().toLocaleDateString();
-msg.payload = "Please find the daily report attached.";
-return msg;</pre>
+  <h4>Single Attachment (Direct Connection)</h4>
+  <p>For a single file, simply connect the upload node directly to the mail node:</p>
+  <pre>[file-in] → [upload] → [send email]</pre>
+  <p>The mail node automatically uses <code>msg.file_id</code> from the upload node.</p>
 
   <h4>Multiple Attachments</h4>
-  <p>To attach multiple files, collect the file IDs and pass them as an array:</p>
-  <pre>msg.attachments = [
-  { fileId: "first-file-uuid" },
-  { fileId: "second-file-uuid" }
-];
+  <p>For multiple files, use a function node to collect the file IDs:</p>
+  <pre>[file-in] → [upload] → [function] → [send email]</pre>
+  <pre>// Collect file IDs using flow context
+let files = flow.get("uploadedFiles") || [];
+files.push({ fileId: msg.file_id });
+flow.set("uploadedFiles", files);
+
+// When ready to send:
+msg.attachments = flow.get("uploadedFiles");
+flow.set("uploadedFiles", []); // Clear for next run
 return msg;</pre>
-  <p><em>Note: You'll need to store file IDs from multiple uploads using flow or global context.</em></p>
 
   <h3>Examples</h3>
   <h4>Simple Text Email</h4>

@@ -28,9 +28,8 @@ Connect your Node-RED flows to the [Process Link](https://processlink.com.au) pl
 | Node | Description |
 |------|-------------|
 | **files upload** | Upload files to Process Link Files API |
+| **send email** | Send emails via ProcessMail API (with optional attachments) |
 | **system info** | Output system diagnostics (hostname, memory, disk, uptime, etc.) |
-
-*More nodes coming soon: mail, downtime logging, notes*
 
 ## Installation
 
@@ -136,6 +135,63 @@ This node has **two outputs**:
 | 404 | Site not found |
 | 429 | Rate limit exceeded (max 30/min) |
 | 507 | Storage limit exceeded |
+
+---
+
+## Send Email
+
+Sends emails via the ProcessMail API with optional file attachments.
+
+### Configuration
+
+| Property | Description |
+|----------|-------------|
+| Config | Your Process Link credentials (API Key) |
+| To | Recipient email address(es) |
+| Subject | Email subject line |
+| Body | Email body content |
+| Body Type | Plain Text or HTML |
+| CC / BCC | Optional carbon copy recipients |
+| Reply-To | Optional reply-to address |
+| Timeout | Request timeout in milliseconds (default: 30000) |
+
+### Inputs
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `msg.to` | string \| string[] | Recipient email address(es) |
+| `msg.subject` | string | Email subject (or `msg.topic`) |
+| `msg.payload` | string | Email body content |
+| `msg.bodyType` | string | "text" (default) or "html" |
+| `msg.file_id` | string | *(Optional)* Single file attachment from upload node |
+| `msg.attachments` | array | *(Optional)* Multiple attachments: `[{ fileId: "uuid" }]` |
+
+### Outputs
+
+| Output | When | Properties |
+|--------|------|------------|
+| **1 - Success** | HTTP 200 | `msg.email_id`, `msg.resend_id`, `msg.statusCode` |
+| **2 - Error** | API/network error | `msg.payload.error`, `msg.statusCode` |
+
+### File Attachments
+
+**Single file (direct connection):** Connect the upload node directly to the mail node. The mail node automatically uses `msg.file_id`.
+
+```
+[file-in] → [upload] → [send email]
+```
+
+**Multiple files:** Use a function node to collect file IDs into `msg.attachments`.
+
+### Status Codes
+
+| Code | Meaning |
+|------|---------|
+| 200 | Email sent successfully |
+| 400 | Bad request (missing fields) |
+| 401 | Invalid API key |
+| 403 | Service not enabled |
+| 429 | Daily email limit reached |
 
 ---
 
