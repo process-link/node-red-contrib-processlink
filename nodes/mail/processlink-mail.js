@@ -74,12 +74,16 @@ module.exports = function (RED) {
         return;
       }
 
+      // Template option (default: true for branded email template)
+      const useTemplate = config.useTemplate !== false && msg.useTemplate !== false;
+
       // Build request body
       const requestBody = {
         to: to,
         subject: subject,
         body: body,
         bodyType: bodyType,
+        useTemplate: useTemplate,
       };
 
       if (cc) requestBody.cc = cc;

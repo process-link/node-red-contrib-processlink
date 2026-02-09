@@ -8,7 +8,12 @@
       "WebFetch(domain:files.processlink.com.au)",
       "Bash(git commit:*)",
       "Bash(npm view:*)",
-      "Read(//c/github/ProcessLink_PortalAndApps/**)"
+      "Read(//c/github/ProcessLink_PortalAndApps/**)",
+      "Read(//c/github/ProcessLink_PortalAndApps/portal/supabase/migrations/**)",
+      "Bash(npx supabase db push:*)"
+    ],
+    "additionalDirectories": [
+      "c:\\github\\ProcessLink_PortalAndApps\\portal\\supabase\\migrations"
     ]
   }
 }

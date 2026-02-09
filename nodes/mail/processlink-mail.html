@@ -12,6 +12,7 @@
       cc: { value: "" },
       bcc: { value: "" },
       replyTo: { value: "" },
+      useTemplate: { value: true },
       timeout: { value: "30000" },
       apiUrl: { value: "https://processmail.processlink.com.au/api/send" },
     },
@@ -69,6 +70,11 @@
   <div class="form-row">
     <label for="node-input-replyTo"><i class="fa fa-reply"></i> Reply-To</label>
     <input type="text" id="node-input-replyTo" placeholder="msg.replyTo (optional)" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-useTemplate">&nbsp;</label>
+    <input type="checkbox" id="node-input-useTemplate" style="width: auto; margin-right: 10px;">
+    <span>Use branded email template</span>
   </div>
   <div class="form-row">
     <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
@@ -154,6 +160,9 @@
     <dd>Select "Plain Text" or "HTML" format.</dd>
     <dt>CC / BCC / Reply-To</dt>
     <dd>Optional. Can be set in config or via message properties.</dd>
+    <dt>Use branded email template</dt>
+    <dd>When enabled (default), wraps emails in a professional template with your organization name,
+    ProcessLink branding, and clickable links to any attached files. Disable for raw email content.</dd>
     <dt>Timeout</dt>
     <dd>Request timeout in ms. Default: 30000.</dd>
   </dl>
