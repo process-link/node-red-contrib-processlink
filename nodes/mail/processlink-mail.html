@@ -1,0 +1,212 @@
+<script type="text/javascript">
+  RED.nodes.registerType("processlink-mail", {
+    category: "Process Link",
+    color: "#f97316",
+    defaults: {
+      name: { value: "" },
+      server: { value: "", type: "processlink-config", required: true },
+      to: { value: "" },
+      subject: { value: "" },
+      body: { value: "" },
+      bodyType: { value: "text" },
+      cc: { value: "" },
+      bcc: { value: "" },
+      replyTo: { value: "" },
+      timeout: { value: "30000" },
+      apiUrl: { value: "https://processmail.processlink.com.au/api/send" },
+    },
+    inputs: 1,
+    outputs: 2,
+    icon: "processlink.png",
+    paletteLabel: "send email",
+    label: function () {
+      return this.name || "send email";
+    },
+    labelStyle: function () {
+      return this.name ? "node_label_italic" : "";
+    },
+    inputLabels: "email data",
+    outputLabels: ["success", "error"],
+  });
+</script>
+
+<script type="text/html" data-template-name="processlink-mail">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-server"><i class="fa fa-server"></i> Config</label>
+    <input type="text" id="node-input-server" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-to"><i class="fa fa-envelope"></i> To</label>
+    <input type="text" id="node-input-to" placeholder="msg.to (or default recipient)" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-subject"><i class="fa fa-header"></i> Subject</label>
+    <input type="text" id="node-input-subject" placeholder="msg.subject or msg.topic" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-body"><i class="fa fa-file-text-o"></i> Body</label>
+    <input type="text" id="node-input-body" placeholder="msg.payload (default)" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-bodyType"><i class="fa fa-code"></i> Body Type</label>
+    <select id="node-input-bodyType">
+      <option value="text">Plain Text</option>
+      <option value="html">HTML</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-cc"><i class="fa fa-envelope-o"></i> CC</label>
+    <input type="text" id="node-input-cc" placeholder="msg.cc (optional)" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-bcc"><i class="fa fa-envelope-o"></i> BCC</label>
+    <input type="text" id="node-input-bcc" placeholder="msg.bcc (optional)" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-replyTo"><i class="fa fa-reply"></i> Reply-To</label>
+    <input type="text" id="node-input-replyTo" placeholder="msg.replyTo (optional)" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
+    <input type="text" id="node-input-timeout" placeholder="30000" />
+    <span style="margin-left: 5px; color: #888">ms</span>
+  </div>
+  <div class="form-row" style="display: none">
+    <label for="node-input-apiUrl"><i class="fa fa-link"></i> API URL</label>
+    <input type="text" id="node-input-apiUrl" />
+  </div>
+</script>
+
+<script type="text/html" data-help-name="processlink-mail">
+  <p>Sends emails via the ProcessMail API.</p>
+
+  <h3>Inputs</h3>
+  <dl class="message-properties">
+    <dt>to <span class="property-type">string | string[]</span></dt>
+    <dd>Recipient email address(es). Can be set in config or via <code>msg.to</code>.</dd>
+
+    <dt>subject <span class="property-type">string</span></dt>
+    <dd>Email subject. Can be set in config or via <code>msg.subject</code> or <code>msg.topic</code>.</dd>
+
+    <dt>payload <span class="property-type">string</span></dt>
+    <dd>Email body content. Uses <code>msg.payload</code> by default, or the config Body field.</dd>
+
+    <dt class="optional">bodyType <span class="property-type">string</span></dt>
+    <dd>"text" (default) or "html". Can be set in config or via <code>msg.bodyType</code>.</dd>
+
+    <dt class="optional">cc <span class="property-type">string | string[]</span></dt>
+    <dd>CC recipients. Via config or <code>msg.cc</code>.</dd>
+
+    <dt class="optional">bcc <span class="property-type">string | string[]</span></dt>
+    <dd>BCC recipients. Via config or <code>msg.bcc</code>.</dd>
+
+    <dt class="optional">replyTo <span class="property-type">string</span></dt>
+    <dd>Reply-To address. Via config or <code>msg.replyTo</code>.</dd>
+
+    <dt class="optional">attachments <span class="property-type">array</span></dt>
+    <dd>File attachments from ProcessLink Files. Format: <code>[{ fileId: "uuid" }]</code></dd>
+  </dl>
+
+  <h3>Outputs</h3>
+  <p>This node has two outputs:</p>
+  <ol>
+    <li><strong>Success</strong> - Email sent successfully (HTTP 200)</li>
+    <li><strong>Error</strong> - Email failed to send (network error, API error, or timeout)</li>
+  </ol>
+
+  <h4>Success Output</h4>
+  <dl class="message-properties">
+    <dt>payload.ok <span class="property-type">boolean</span></dt>
+    <dd><code>true</code></dd>
+    <dt>payload.email_id <span class="property-type">string</span></dt>
+    <dd>ProcessMail log ID.</dd>
+    <dt>payload.resend_id <span class="property-type">string</span></dt>
+    <dd>Resend API ID for tracking.</dd>
+    <dt>email_id <span class="property-type">string</span></dt>
+    <dd>Same as above (convenience property).</dd>
+    <dt>statusCode <span class="property-type">number</span></dt>
+    <dd>200</dd>
+  </dl>
+
+  <h4>Error Output</h4>
+  <dl class="message-properties">
+    <dt>payload.error <span class="property-type">string</span></dt>
+    <dd>Error message from the API or network layer.</dd>
+    <dt>payload.code <span class="property-type">string</span></dt>
+    <dd>Error code: MISSING_FIELDS, RATE_LIMIT_EXCEEDED, SEND_FAILED, etc.</dd>
+    <dt>statusCode <span class="property-type">number</span></dt>
+    <dd>HTTP status code, or 0 for network/timeout errors.</dd>
+  </dl>
+
+  <h3>Configuration</h3>
+  <dl class="message-properties">
+    <dt>To / Subject / Body</dt>
+    <dd>Set default values here, or leave blank to use message properties.
+    Config values take priority over message values.</dd>
+    <dt>Body Type</dt>
+    <dd>Select "Plain Text" or "HTML" format.</dd>
+    <dt>CC / BCC / Reply-To</dt>
+    <dd>Optional. Can be set in config or via message properties.</dd>
+    <dt>Timeout</dt>
+    <dd>Request timeout in ms. Default: 30000.</dd>
+  </dl>
+
+  <h3>File Attachments</h3>
+  <p>To send emails with file attachments, first upload the file using the
+  <code>processlink-files-upload</code> node, then pass the file ID to this node.</p>
+
+  <h4>Typical Flow</h4>
+  <pre>[file-in] → [upload] → [function] → [send email]</pre>
+
+  <h4>Example: Email a Report</h4>
+  <p>After the upload node, use a function node to prepare the email:</p>
+  <pre>// The upload node sets msg.file_id
+msg.attachments = [{ fileId: msg.file_id }];
+msg.to = "manager@example.com";
+msg.subject = "Daily Report - " + new Date().toLocaleDateString();
+msg.payload = "Please find the daily report attached.";
+return msg;</pre>
+
+  <h4>Multiple Attachments</h4>
+  <p>To attach multiple files, collect the file IDs and pass them as an array:</p>
+  <pre>msg.attachments = [
+  { fileId: "first-file-uuid" },
+  { fileId: "second-file-uuid" }
+];
+return msg;</pre>
+  <p><em>Note: You'll need to store file IDs from multiple uploads using flow or global context.</em></p>
+
+  <h3>Examples</h3>
+  <h4>Simple Text Email</h4>
+  <pre>msg.to = "user@example.com";
+msg.subject = "Alert: System Down";
+msg.payload = "The production line has stopped.";
+return msg;</pre>
+
+  <h4>HTML Email</h4>
+  <pre>msg.to = ["manager@example.com", "ops@example.com"];
+msg.subject = "Daily Report";
+msg.payload = "&lt;h1&gt;Report&lt;/h1&gt;&lt;p&gt;All systems normal.&lt;/p&gt;";
+msg.bodyType = "html";
+return msg;</pre>
+
+  <h3>Status Codes</h3>
+  <ul>
+    <li><strong>200</strong> - Email sent successfully</li>
+    <li><strong>400</strong> - Bad request (missing fields, too many attachments)</li>
+    <li><strong>401</strong> - Invalid API key</li>
+    <li><strong>403</strong> - Service not enabled or missing scope</li>
+    <li><strong>429</strong> - Daily email limit reached</li>
+    <li><strong>500</strong> - Server error</li>
+  </ul>
+
+  <h3>References</h3>
+  <ul>
+    <li><a href="https://portal.processlink.com.au" target="_blank">Process Link Portal</a></li>
+    <li><a href="https://github.com/process-link/node-red-contrib-processlink" target="_blank">GitHub</a></li>
+  </ul>
+</script>
