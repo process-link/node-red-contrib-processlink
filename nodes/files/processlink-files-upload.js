@@ -30,8 +30,8 @@ module.exports = function (RED) {
       const apiKey = node.server.credentials?.apiKey;
 
       if (!siteId) {
-        node.status({ fill: "red", shape: "ring", text: "no site ID" });
-        done(new Error("Site ID not configured"));
+        node.status({ fill: "red", shape: "ring", text: "config missing Site ID" });
+        done(new Error("Site ID required for file operations. Add a Site ID to your Process Link config node."));
         return;
       }
 

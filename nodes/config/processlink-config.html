@@ -3,13 +3,34 @@
     category: "config",
     defaults: {
       name: { value: "" },
-      siteId: { value: "", required: true },
+      siteId: { value: "", required: false },
+      apiKeyPrefix: { value: "" },
     },
     credentials: {
       apiKey: { type: "password" },
     },
     label: function () {
       return this.name || "Process Link Config";
+    },
+    oneditprepare: function () {
+      var node = this;
+      var apiKeyInput = $("#node-config-input-apiKey");
+      var prefixHint = $("#apikey-prefix-hint");
+
+      // Show existing prefix if we have one
+      if (node.apiKeyPrefix) {
+        prefixHint.text("Current key: " + node.apiKeyPrefix + "...").show();
+      }
+
+      // When API key changes, capture the prefix
+      apiKeyInput.on("change keyup", function () {
+        var val = apiKeyInput.val();
+        // Only update if it's a new key (not the masked placeholder)
+        if (val && val.length >= 8 && !val.startsWith("__PWRD__")) {
+          node.apiKeyPrefix = val.substring(0, 8);
+          prefixHint.text("Key prefix: " + node.apiKeyPrefix + "...").show();
+        }
+      });
     },
   });
 </script>
@@ -30,14 +51,17 @@
   <div class="form-row">
     <label for="node-config-input-apiKey"><i class="fa fa-key"></i> API Key</label>
     <input type="password" id="node-config-input-apiKey" placeholder="Your API key" />
+    <span id="apikey-prefix-hint" style="display:none; margin-left: 105px; color: #888; font-size: 12px;"></span>
   </div>
   <div class="form-tips">
     <p>
-      Get your Site ID and API Key from the
-      <a href="https://portal.processlink.com.au" target="_blank">Process Link Portal</a>.
+      Get your API Key from the
+      <a href="https://portal.processlink.com.au" target="_blank">Process Link Portal</a>
+      under <strong>Developer &rarr; API Keys</strong>.
     </p>
     <p>
-      Go to <strong>Developer → API Keys</strong> to generate a new key.
+      <strong>Site ID</strong> is required for Files and ShiftLink nodes.
+      Leave it blank if you only need ProcessMail (email sending).
     </p>
   </div>
 </script>
@@ -50,16 +74,20 @@
     <dt>Name <span class="property-type">string</span></dt>
     <dd>Optional friendly name for this configuration.</dd>
     <dt>Site ID <span class="property-type">string</span></dt>
-    <dd>The UUID of your site from Process Link. Found in your organisation settings under Developer.</dd>
+    <dd>The UUID of your site from Process Link. Required for Files Upload and ShiftLink nodes. Optional for ProcessMail nodes.</dd>
     <dt>API Key <span class="property-type">string</span></dt>
     <dd>
-      The API key for authentication. Generate one from Developer → API Keys in the Process Link Portal.
+      The API key for authentication. Generate one from Developer &rarr; API Keys in the Process Link Portal.
     </dd>
   </dl>
 
   <h3>Details</h3>
   <p>
-    This configuration is shared across all Process Link nodes in your flow. The API key is stored
+    This configuration is shared across Process Link nodes in your flow. The API key is stored
     encrypted by Node-RED.
+  </p>
+  <p>
+    <strong>Recommended setup:</strong> Use two config nodes &mdash; one with a site-scoped key (for Files/ShiftLink)
+    and one with an org-wide key (for ProcessMail).
   </p>
 </script>
