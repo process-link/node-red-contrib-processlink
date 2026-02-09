@@ -2,6 +2,8 @@
 .git
 .gitignore
 .github
+.claude/
+jest.config.js
 
 # Documentation (README is needed, but not these)
 CONTRIBUTING.md
@@ -14,6 +16,9 @@ tests/
 *.spec.js
 coverage/
 .nyc_output/
+
+# Local credentials (demo flow with real API keys)
+examples/demo-flow.local.json
 
 # IDE and editor files
 .vscode/
