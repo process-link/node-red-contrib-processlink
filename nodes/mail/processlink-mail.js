@@ -128,12 +128,22 @@ module.exports = function (RED) {
             parsedResponse = { raw: responseData };
           }
 
-          msg.payload = parsedResponse;
           msg.statusCode = res.statusCode;
-          msg.headers = res.headers;
 
           if (res.statusCode === 200 && parsedResponse.ok) {
-            // Success - send to output 1
+            // Success - send to output 1 with clean payload
+            msg.payload = {
+              ok: true,
+              status: parsedResponse.status || "sent",
+              email_id: parsedResponse.email_id,
+              resend_id: parsedResponse.resend_id,
+              attachments_count: parsedResponse.attachments_count || 0,
+            };
+            // Include warning if logging failed on server
+            if (parsedResponse.log_warning) {
+              msg.payload.log_warning = parsedResponse.log_warning;
+            }
+            // Convenience properties for easy wiring
             msg.email_id = parsedResponse.email_id;
             msg.resend_id = parsedResponse.resend_id;
             node.status({
@@ -149,6 +159,11 @@ module.exports = function (RED) {
           } else {
             // API error - send to output 2
             const errorMsg = parsedResponse.error || parsedResponse.message || `HTTP ${res.statusCode}`;
+            msg.payload = {
+              ok: false,
+              error: errorMsg,
+              code: parsedResponse.code,
+            };
             node.status({ fill: "red", shape: "dot", text: errorMsg });
 
             send([null, msg]);

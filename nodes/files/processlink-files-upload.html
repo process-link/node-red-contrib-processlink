@@ -177,7 +177,7 @@
   </div>
   <div class="form-row">
     <label for="node-input-filename"><i class="fa fa-file"></i> Filename</label>
-    <input type="text" id="node-input-filename" placeholder="msg.filename (or specify default)" />
+    <input type="text" id="node-input-filename" placeholder="msg.filename (extension auto-added if missing)" />
   </div>
   <div class="form-row">
     <label for="node-input-location"><i class="fa fa-folder"></i> Location</label>
@@ -247,7 +247,8 @@
   <h3>Configuration</h3>
   <dl class="message-properties">
     <dt>Filename <span class="property-type">string</span></dt>
-    <dd>Filename for uploaded file. Takes priority over <code>msg.filename</code>.</dd>
+    <dd>Filename for uploaded file. Takes priority over <code>msg.filename</code>.
+    If no extension is provided (e.g., "report"), the extension from <code>msg.filename</code> is automatically appended (e.g., "report.pdf").</dd>
     <dt>Location <span class="property-type">select</span></dt>
     <dd>Destination area/folder in the Files app. Default: site root.</dd>
     <dt>Prefix with timestamp <span class="property-type">boolean</span></dt>

@@ -54,8 +54,22 @@ module.exports = function (RED) {
       }
 
       // Get filename (config takes priority over msg.filename)
-      const filename = config.filename || msg.filename || "file.bin";
-      let basename = filename.split(/[\\/]/).pop();
+      // If config filename has no extension, inherit from msg.filename
+      let basename;
+      if (config.filename) {
+        basename = config.filename;
+        // Check if config filename lacks an extension
+        if (!basename.includes(".") && msg.filename) {
+          // Extract extension from msg.filename (e.g., "report.pdf" -> ".pdf")
+          const origName = msg.filename.split(/[\\/]/).pop();
+          const extMatch = origName.match(/\.[^.]+$/);
+          if (extMatch) {
+            basename = basename + extMatch[0];
+          }
+        }
+      } else {
+        basename = (msg.filename || "file.bin").split(/[\\/]/).pop();
+      }
 
       // Add timestamp prefix if enabled
       if (config.timestampPrefix) {
