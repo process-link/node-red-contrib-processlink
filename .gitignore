@@ -1,3 +1,7 @@
 node_modules/
 *.tgz
 .DS_Store
+coverage/
+
+# Local demo flow with real credentials (not for publishing)
+examples/demo-flow.local.json

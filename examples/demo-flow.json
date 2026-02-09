@@ -12,7 +12,7 @@
         "type": "comment",
         "z": "e453f86ed59b6b3d",
         "name": "ProcessLink Demo Flow - Double-click to read",
-        "info": "# ProcessLink Demo Flow\n\nThis flow demonstrates the ProcessLink\nnodes for Node-RED.\n\n## How to use\n\nDouble-click on any comment node\n(like this one) to read detailed\ninstructions for each example.\n\n## Setup\n\n1. Configure your API keys in the\n   ProcessLink config nodes\n2. Run each example by clicking\n   the inject button\n\n## Examples\n\n1. CSV Generation\n2. System Info\n3. Simple File Upload\n4. Upload + Email (with attachment)\n5. Upload + Email (link only)\n6. Send Email Only\n7. Send SMS Alert",
+        "info": "# ProcessLink Demo Flow\n\nThis flow demonstrates the ProcessLink\nnodes for Node-RED.\n\n## Setup Required\n\nThis demo includes two config nodes:\n\n1. **Files API (Site Scope)**\n   - Used for file uploads\n   - Requires a Site-scoped API key\n   - Set your Site ID in the config\n\n2. **Email & SMS API (Org Scope)**\n   - Used for sending emails and SMS\n   - Requires an Org-scoped API key\n   - Leave Site ID blank\n\n## How to configure\n\n1. Double-click any ProcessLink node\n2. Click the pencil icon next to Config\n3. Enter your API key from the Portal\n4. Save and deploy\n\n## Examples\n\n1. CSV Generation\n2. System Info\n3. Simple File Upload\n4. Upload + Email (with attachment)\n5. Upload + Email (link only)\n6. Send Email Only\n7. Send SMS Alert",
         "x": 180,
         "y": 20,
         "wires": []
@@ -240,9 +240,9 @@
         "type": "processlink-files-upload",
         "z": "e453f86ed59b6b3d",
         "name": "Upload to ProcessLink",
-        "server": "c2b2132b8076fcce",
-        "filename": "node-red-1",
-        "areaId": "39a0f586-a153-4002-ac2d-a6add1364d3a",
+        "server": "config_site_files",
+        "filename": "sensor-data",
+        "areaId": "",
         "folderId": "",
         "timestampPrefix": true,
         "timeout": "30000",
@@ -352,8 +352,8 @@
         "type": "processlink-files-upload",
         "z": "e453f86ed59b6b3d",
         "name": "Upload to ProcessLink",
-        "server": "c67a8c5b0867c77a",
-        "filename": "node-red-9",
+        "server": "config_site_files",
+        "filename": "report",
         "areaId": "",
         "folderId": "",
         "timestampPrefix": true,
@@ -376,9 +376,9 @@
         "type": "processlink-mail",
         "z": "e453f86ed59b6b3d",
         "name": "Send Email",
-        "server": "cfcef837004f2691",
-        "to": "tom.sharwood@processlink.com.au",
-        "subject": "Subject - Test",
+        "server": "config_org_email_sms",
+        "to": "recipient@example.com",
+        "subject": "File Upload Notification",
         "body": "",
         "bodyType": "text",
         "cc": "",
@@ -489,7 +489,7 @@
             },
             {
                 "p": "subject",
-                "v": "inject test subject",
+                "v": "Test Email Subject",
                 "vt": "str"
             }
         ],
@@ -511,8 +511,8 @@
         "type": "processlink-mail",
         "z": "e453f86ed59b6b3d",
         "name": "Send Email",
-        "server": "cfcef837004f2691",
-        "to": "tom.sharwood@processlink.com.au",
+        "server": "config_org_email_sms",
+        "to": "recipient@example.com",
         "subject": "",
         "body": "",
         "bodyType": "text",
@@ -580,7 +580,7 @@
             },
             {
                 "p": "subject",
-                "v": "inject test subject",
+                "v": "Dynamic Subject from Inject",
                 "vt": "str"
             }
         ],
@@ -657,7 +657,7 @@
         "type": "processlink-files-upload",
         "z": "e453f86ed59b6b3d",
         "name": "Upload to ProcessLink",
-        "server": "c67a8c5b0867c77a",
+        "server": "config_site_files",
         "filename": "large-report",
         "areaId": "",
         "folderId": "",
@@ -676,13 +676,13 @@
             ]
         ]
     },
-        {
+    {
         "id": "5ae2d094b68c1dd0",
         "type": "processlink-mail",
         "z": "e453f86ed59b6b3d",
         "name": "Send Email (Link Only)",
-        "server": "cfcef837004f2691",
-        "to": "tom.sharwood@processlink.com.au",
+        "server": "config_org_email_sms",
+        "to": "recipient@example.com",
         "subject": "File Available for Download",
         "body": "A file has been uploaded for you.",
         "bodyType": "text",
@@ -817,7 +817,7 @@
         "type": "processlink-sms",
         "z": "e453f86ed59b6b3d",
         "name": "Send SMS",
-        "server": "cfcef837004f2691",
+        "server": "config_org_email_sms",
         "to": "",
         "body": "",
         "timeout": "30000",
@@ -898,22 +898,15 @@
         ]
     },
     {
-        "id": "c2b2132b8076fcce",
+        "id": "config_site_files",
         "type": "processlink-config",
-        "name": "node-red-1 | Melbourne Site",
-        "siteId": "7f55dade-2207-41d0-95f9-462505792c1a"
+        "name": "Files API (Site Scope)",
+        "siteId": "YOUR_SITE_ID"
     },
     {
-        "id": "c67a8c5b0867c77a",
+        "id": "config_org_email_sms",
         "type": "processlink-config",
-        "name": "node-red-9",
-        "siteId": "7f55dade-2207-41d0-95f9-462505792c1a"
-    },
-    {
-        "id": "cfcef837004f2691",
-        "type": "processlink-config",
-        "name": "node-red-11",
-        "siteId": "",
-        "apiKeyPrefix": "plk_8e6J"
+        "name": "Email & SMS API (Org Scope)",
+        "siteId": ""
     }
 ]
