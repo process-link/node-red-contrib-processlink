@@ -90,7 +90,7 @@ module.exports = function (RED) {
           }
         }
       } else {
-        basename = (msg.filename || "file.bin").split(/[\\/]/).pop();
+        basename = (msg.filename || "unknown-file").split(/[\\/]/).pop();
       }
 
       // Add timestamp prefix if enabled

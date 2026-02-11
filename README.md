@@ -95,7 +95,7 @@ Uploads files to the Process Link Files API.
 | Prefix with timestamp | Adds `YYYY-MM-DD_HH-mm-ss_` prefix to filename (ISO 8601 format) |
 | Timeout | Request timeout in milliseconds (default: 30000) |
 
-**Filename priority:** Config filename → `msg.filename` → `file.bin`
+**Filename priority:** Config filename → `msg.filename` → `unknown-file`
 
 **Location:** The dropdown shows your site's folder structure organized by area. Select where uploaded files should be stored. Areas and folders are fetched from the Files API when you open the node configuration.
 
