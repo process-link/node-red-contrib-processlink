@@ -5,10 +5,12 @@
 
 module.exports = function (RED) {
   const https = require("https");
-  const http = require("http");
 
   // Maximum file size: 100 MB
   const MAX_FILE_SIZE = 100 * 1024 * 1024;
+
+  // UUID format validation
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   /**
    * Sanitize filename for Content-Disposition header
@@ -47,6 +49,12 @@ module.exports = function (RED) {
       if (!siteId) {
         node.status({ fill: "red", shape: "ring", text: "config missing Site ID" });
         done(new Error("Site ID required for file operations. Add a Site ID to your Process Link config node."));
+        return;
+      }
+
+      if (!UUID_RE.test(siteId)) {
+        node.status({ fill: "red", shape: "ring", text: "invalid Site ID" });
+        done(new Error("Site ID must be a valid UUID format"));
         return;
       }
 
@@ -140,17 +148,13 @@ module.exports = function (RED) {
 
       const body = Buffer.concat(parts);
 
-      // Build API URL with siteId in path
-      const apiUrl = (config.apiUrl || "https://files.processlink.com.au/api/v1/sites/{siteId}/files/upload")
-        .replace("{siteId}", siteId);
-
-      const url = new URL(apiUrl);
-      const isHttps = url.protocol === "https:";
+      // API endpoint with siteId in path
+      const apiUrl = new URL(`https://files.processlink.com.au/api/v1/sites/${encodeURIComponent(siteId)}/files/upload`);
 
       const options = {
-        hostname: url.hostname,
-        port: url.port || (isHttps ? 443 : 80),
-        path: url.pathname,
+        hostname: apiUrl.hostname,
+        port: 443,
+        path: apiUrl.pathname,
         method: "POST",
         headers: {
           "Content-Type": `multipart/form-data; boundary=${boundary}`,
@@ -161,8 +165,7 @@ module.exports = function (RED) {
 
       node.status({ fill: "yellow", shape: "dot", text: "uploading..." });
 
-      const transport = isHttps ? https : http;
-      const req = transport.request(options, (res) => {
+      const req = https.request(options, (res) => {
         let responseData = "";
 
         res.on("data", (chunk) => {

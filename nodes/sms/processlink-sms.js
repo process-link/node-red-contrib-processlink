@@ -5,7 +5,6 @@
 
 module.exports = function (RED) {
   const https = require("https");
-  const http = require("http");
 
   function ProcessLinkSmsNode(config) {
     RED.nodes.createNode(this, config);
@@ -72,15 +71,13 @@ module.exports = function (RED) {
 
       const bodyString = JSON.stringify(requestBody);
 
-      // Parse URL
-      const apiUrl = config.apiUrl || "https://processmail.processlink.com.au/api/v1/send-sms";
-      const url = new URL(apiUrl);
-      const isHttps = url.protocol === "https:";
+      // API endpoint
+      const apiUrl = new URL("https://processmail.processlink.com.au/api/v1/send-sms");
 
       const options = {
-        hostname: url.hostname,
-        port: url.port || (isHttps ? 443 : 80),
-        path: url.pathname,
+        hostname: apiUrl.hostname,
+        port: 443,
+        path: apiUrl.pathname,
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -96,8 +93,7 @@ module.exports = function (RED) {
         : recipientLabel;
       node.status({ fill: "yellow", shape: "dot", text: "sending..." });
 
-      const transport = isHttps ? https : http;
-      const req = transport.request(options, (res) => {
+      const req = https.request(options, (res) => {
         let responseData = "";
 
         res.on("data", (chunk) => {

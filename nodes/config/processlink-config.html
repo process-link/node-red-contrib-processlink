@@ -3,8 +3,8 @@
     category: "config",
     defaults: {
       name: { value: "" },
-      siteId: { value: "", required: false },
-      apiKeyPrefix: { value: "" },
+      siteId: { value: "", validate: function(v) { return !v || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v); } },
+      apiKeySuffix: { value: "" },
     },
     credentials: {
       apiKey: { type: "password" },
@@ -17,18 +17,18 @@
       var apiKeyInput = $("#node-config-input-apiKey");
       var prefixHint = $("#apikey-prefix-hint");
 
-      // Show existing prefix if we have one
-      if (node.apiKeyPrefix) {
-        prefixHint.text("Current key: " + node.apiKeyPrefix + "...").show();
+      // Show existing key suffix if we have one
+      if (node.apiKeySuffix) {
+        prefixHint.text("Key ending in ..." + node.apiKeySuffix).show();
       }
 
-      // When API key changes, capture the prefix
+      // When API key changes, capture the last 4 characters
       apiKeyInput.on("change keyup", function () {
         var val = apiKeyInput.val();
         // Only update if it's a new key (not the masked placeholder)
-        if (val && val.length >= 8 && !val.startsWith("__PWRD__")) {
-          node.apiKeyPrefix = val.substring(0, 8);
-          prefixHint.text("Key prefix: " + node.apiKeyPrefix + "...").show();
+        if (val && val.length >= 4 && !val.startsWith("__PWRD__")) {
+          node.apiKeySuffix = val.slice(-4);
+          prefixHint.text("Key ending in ..." + node.apiKeySuffix).show();
         }
       });
     },

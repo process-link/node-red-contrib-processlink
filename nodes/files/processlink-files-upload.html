@@ -9,8 +9,7 @@
       areaId: { value: "" },
       folderId: { value: "" },
       timestampPrefix: { value: false },
-      timeout: { value: "30000" },
-      apiUrl: { value: "https://files.processlink.com.au/api/v1/sites/{siteId}/files/upload" },
+      timeout: { value: "30000", validate: function(v) { return !v || /^\d+$/.test(v); } },
     },
     inputs: 1,
     outputs: 2,
@@ -59,7 +58,17 @@
           var currentFolderId = node.folderId || "";
           var currentKey = currentAreaId + "|" + currentFolderId;
 
-          var options = '<option value="|" data-area="" data-folder="">Site root (default)</option>';
+          // Helper to create an <option> element safely (escapes text content)
+          function makeOption(value, areaId, folderId, label, indent) {
+            var $opt = $('<option>').val(value).attr('data-area', areaId || '').attr('data-folder', folderId || '');
+            if (indent) $opt.html(indent + $('<span>').text(label).html());
+            else $opt.text(label);
+            if (value === currentKey) $opt.prop('selected', true);
+            return $opt;
+          }
+
+          $location.empty();
+          $location.append(makeOption('|', '', '', 'Site root (default)', ''));
 
           // Group folders by area
           var foldersByArea = {};
@@ -69,77 +78,58 @@
             foldersByArea[areaKey].push(f);
           });
 
-          // Add areas with their folders
-          areas.forEach(function (area) {
-            var areaFolders = foldersByArea[area.id] || [];
-            options += '<optgroup label="' + area.area_name + '">';
-
-            // Area root option
-            var areaRootKey = area.id + "|";
-            var areaRootSelected = areaRootKey === currentKey ? ' selected' : '';
-            options += '<option value="' + areaRootKey + '" data-area="' + area.id + '" data-folder=""' + areaRootSelected + '>' + area.area_name + ' (root)</option>';
-
-            // Root folders in this area
+          // Helper to add folders to a container
+          function addFolders(container, areaFolders, areaId) {
             var rootFolders = areaFolders.filter(function (f) { return !f.parent_id; });
             rootFolders.sort(function (a, b) { return a.name.localeCompare(b.name); });
 
             rootFolders.forEach(function (folder) {
-              var folderKey = area.id + "|" + folder.id;
-              var selected = folderKey === currentKey ? ' selected' : '';
-              options += '<option value="' + folderKey + '" data-area="' + area.id + '" data-folder="' + folder.id + '"' + selected + '>&nbsp;&nbsp;' + folder.name + '</option>';
+              container.append(makeOption(areaId + '|' + folder.id, areaId, folder.id, folder.name, '&nbsp;&nbsp;'));
 
               // Child folders
               var children = areaFolders.filter(function (c) { return c.parent_id === folder.id; });
               children.sort(function (a, b) { return a.name.localeCompare(b.name); });
               children.forEach(function (child) {
-                var childKey = area.id + "|" + child.id;
-                var childSelected = childKey === currentKey ? ' selected' : '';
-                options += '<option value="' + childKey + '" data-area="' + area.id + '" data-folder="' + child.id + '"' + childSelected + '>&nbsp;&nbsp;&nbsp;&nbsp;' + child.name + '</option>';
+                container.append(makeOption(areaId + '|' + child.id, areaId, child.id, child.name, '&nbsp;&nbsp;&nbsp;&nbsp;'));
               });
             });
+          }
 
-            options += '</optgroup>';
+          // Add areas with their folders
+          areas.forEach(function (area) {
+            var areaFolders = foldersByArea[area.id] || [];
+            var $group = $('<optgroup>').attr('label', area.area_name);
+
+            // Area root option
+            $group.append(makeOption(area.id + '|', area.id, '', area.area_name + ' (root)', ''));
+            addFolders($group, areaFolders, area.id);
+
+            $location.append($group);
           });
 
           // Add folders without an area
           var noAreaFolders = foldersByArea[""] || [];
           if (noAreaFolders.length > 0) {
-            options += '<optgroup label="No Area">';
-            var rootFolders = noAreaFolders.filter(function (f) { return !f.parent_id; });
-            rootFolders.sort(function (a, b) { return a.name.localeCompare(b.name); });
-
-            rootFolders.forEach(function (folder) {
-              var folderKey = "|" + folder.id;
-              var selected = folderKey === currentKey ? ' selected' : '';
-              options += '<option value="' + folderKey + '" data-area="" data-folder="' + folder.id + '"' + selected + '>' + folder.name + '</option>';
-
-              var children = noAreaFolders.filter(function (c) { return c.parent_id === folder.id; });
-              children.sort(function (a, b) { return a.name.localeCompare(b.name); });
-              children.forEach(function (child) {
-                var childKey = "|" + child.id;
-                var childSelected = childKey === currentKey ? ' selected' : '';
-                options += '<option value="' + childKey + '" data-area="" data-folder="' + child.id + '"' + childSelected + '>&nbsp;&nbsp;' + child.name + '</option>';
-              });
-            });
-            options += '</optgroup>';
+            var $noAreaGroup = $('<optgroup>').attr('label', 'No Area');
+            addFolders($noAreaGroup, noAreaFolders, '');
+            $location.append($noAreaGroup);
           }
-
-          $location.html(options);
         }).fail(function (xhr) {
           console.error("Failed to load locations:", xhr.responseText);
-          // Check if config needs to be deployed
-          var errorMsg = "";
+          var errorMsg = "Failed to load locations";
           try {
             var err = JSON.parse(xhr.responseText);
             if (err.error === "Config node not found") {
               errorMsg = "Deploy config first, then click Refresh";
-            } else {
-              errorMsg = err.error || "Failed to load";
+            } else if (err.error) {
+              errorMsg = err.error;
             }
           } catch (e) {
-            errorMsg = "Failed to load locations";
+            // keep default errorMsg
           }
-          $location.html('<option value="|">Site root (default)</option><option disabled>-- ' + errorMsg + ' --</option>');
+          $location.empty();
+          $location.append($('<option>').val('|').text('Site root (default)'));
+          $location.append($('<option>').prop('disabled', true).text('-- ' + errorMsg + ' --'));
         });
       }
 
@@ -150,8 +140,10 @@
         $folderId.val($selected.data("folder") || "");
       });
 
-      // Load locations when config changes
+      // Load locations when config changes (clear stale values)
       $server.on("change", function () {
+        $areaId.val("");
+        $folderId.val("");
         loadLocations();
       });
 
@@ -199,10 +191,6 @@
     <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
     <input type="text" id="node-input-timeout" placeholder="30000" />
     <span style="margin-left: 5px; color: #888">ms</span>
-  </div>
-  <div class="form-row" style="display: none">
-    <label for="node-input-apiUrl"><i class="fa fa-link"></i> API URL</label>
-    <input type="text" id="node-input-apiUrl" />
   </div>
 </script>
 

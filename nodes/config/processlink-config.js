@@ -14,14 +14,26 @@ module.exports = function (RED) {
     "portal.processlink.com.au"
   ];
 
+  // UUID format validation
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
   // Request timeout in milliseconds
   const REQUEST_TIMEOUT = 10000;
 
   // Overall timeout for parallel requests (prevents indefinite hangs)
   const OVERALL_TIMEOUT = 15000;
 
+  // Maximum number of redirects to follow
+  const MAX_REDIRECTS = 5;
+
   // Helper to make HTTPS request that follows redirects
-  function httpsGet(options, callback) {
+  function httpsGet(options, callback, redirectCount) {
+    redirectCount = redirectCount || 0;
+    if (redirectCount > MAX_REDIRECTS) {
+      callback(null, new Error("Too many redirects"));
+      return;
+    }
+
     const req = https.request(options, (res) => {
       // Follow redirects (301, 302, 307, 308)
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
@@ -52,7 +64,7 @@ module.exports = function (RED) {
         }
 
         console.log(`[ProcessLink] Following redirect to: ${redirectOptions.hostname}${redirectOptions.path}`);
-        httpsGet(redirectOptions, callback);
+        httpsGet(redirectOptions, callback, redirectCount + 1);
         return;
       }
       callback(res);
@@ -92,6 +104,10 @@ module.exports = function (RED) {
 
     if (!siteId || !apiKey) {
       return res.status(400).json({ error: "Config not ready" });
+    }
+
+    if (!UUID_RE.test(siteId)) {
+      return res.status(400).json({ error: "Invalid Site ID format (expected UUID)" });
     }
 
     const baseUrl = `/api/sites/${siteId}`;
@@ -146,7 +162,7 @@ module.exports = function (RED) {
         areasRes.on("data", (chunk) => (data += chunk));
         areasRes.on("end", () => {
           if (areasRes.statusCode !== 200) {
-            console.log(`[ProcessLink] Areas API returned ${areasRes.statusCode}: ${data}`);
+            console.log(`[ProcessLink] Areas API returned ${areasRes.statusCode}: ${data.substring(0, 200)}`);
             areasData = [];
           } else {
             try {
@@ -188,7 +204,7 @@ module.exports = function (RED) {
         foldersRes.on("data", (chunk) => (data += chunk));
         foldersRes.on("end", () => {
           if (foldersRes.statusCode !== 200) {
-            console.log(`[ProcessLink] Folders API returned ${foldersRes.statusCode}: ${data}`);
+            console.log(`[ProcessLink] Folders API returned ${foldersRes.statusCode}: ${data.substring(0, 200)}`);
             foldersData = [];
           } else {
             try {
