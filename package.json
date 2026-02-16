@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Node-RED nodes for Process Link platform integration - upload files, send emails, send SMS alerts, and connect to industrial automation systems",
   "keywords": [
     "node-red",
@@ -24,7 +24,8 @@
     "sms",
     "twilio",
     "alerts",
-    "notifications"
+    "notifications",
+    "notification-groups"
   ],
   "node-red": {
     "version": ">=2.0.0",
@@ -33,7 +34,8 @@
       "processlink-files-upload": "nodes/files/processlink-files-upload.js",
       "processlink-system-info": "nodes/system/processlink-system-info.js",
       "processlink-mail": "nodes/mail/processlink-mail.js",
-      "processlink-sms": "nodes/sms/processlink-sms.js"
+      "processlink-sms": "nodes/sms/processlink-sms.js",
+      "processlink-notify-group": "nodes/notify/processlink-notify-group.js"
     }
   },
   "scripts": {

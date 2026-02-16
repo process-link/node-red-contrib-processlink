@@ -10,7 +10,11 @@
       "Bash(npm view:*)",
       "Read(//c/github/ProcessLink_PortalAndApps/**)",
       "Read(//c/github/ProcessLink_PortalAndApps/portal/supabase/migrations/**)",
-      "Bash(npx supabase db push:*)"
+      "Bash(npx supabase db push:*)",
+      "Bash(git pull:*)",
+      "Bash(npm version:*)",
+      "Bash(npm deprecate:*)",
+      "Bash(npm test:*)"
     ],
     "additionalDirectories": [
       "c:\\github\\ProcessLink_PortalAndApps\\portal\\supabase\\migrations"

@@ -1,0 +1,220 @@
+<script type="text/javascript">
+  RED.nodes.registerType("processlink-notify-group", {
+    category: "Process Link",
+    color: "#f97316",
+    defaults: {
+      name: { value: "" },
+      server: { value: "", type: "processlink-config", required: true },
+      groupKey: { value: "" },
+      subject: { value: "" },
+      body: { value: "" },
+      bodyType: { value: "text" },
+      useTemplate: { value: true },
+      linkOnly: { value: false },
+      timeout: { value: "30000", validate: function(v) { return !v || /^\d+$/.test(v); } },
+    },
+    inputs: 1,
+    outputs: 2,
+    icon: "processlink.png",
+    paletteLabel: "notify group",
+    label: function () {
+      if (this.name) return this.name;
+      if (this.groupKey) return "notify: " + this.groupKey;
+      return "notify group";
+    },
+    labelStyle: function () {
+      return this.name ? "node_label_italic" : "";
+    },
+    inputLabels: "notification data",
+    outputLabels: ["success", "error"],
+  });
+</script>
+
+<script type="text/html" data-template-name="processlink-notify-group">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name" placeholder="Name" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-server"><i class="fa fa-server"></i> Config</label>
+    <input type="text" id="node-input-server" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-groupKey"><i class="fa fa-users"></i> Group Key</label>
+    <input type="text" id="node-input-groupKey" placeholder="e.g. maintenance-alerts" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-subject"><i class="fa fa-header"></i> Subject</label>
+    <input type="text" id="node-input-subject" placeholder="msg.subject" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-body"><i class="fa fa-file-text-o"></i> Body</label>
+    <input type="text" id="node-input-body" placeholder="msg.body or msg.payload" />
+  </div>
+  <div class="form-row">
+    <label for="node-input-bodyType"><i class="fa fa-code"></i> Body Type</label>
+    <select id="node-input-bodyType">
+      <option value="text">Plain Text</option>
+      <option value="html">HTML</option>
+    </select>
+  </div>
+  <div class="form-row">
+    <label for="node-input-useTemplate">&nbsp;</label>
+    <input type="checkbox" id="node-input-useTemplate" style="width: auto; margin-right: 10px;">
+    <span>Use branded email template</span>
+  </div>
+  <div class="form-row">
+    <label for="node-input-linkOnly">&nbsp;</label>
+    <input type="checkbox" id="node-input-linkOnly" style="width: auto; margin-right: 10px;">
+    <span>Link only (don't attach files to emails)</span>
+  </div>
+  <div class="form-row">
+    <label for="node-input-timeout"><i class="fa fa-clock-o"></i> Timeout</label>
+    <input type="text" id="node-input-timeout" placeholder="30000" />
+    <span style="margin-left: 5px; color: #888">ms</span>
+  </div>
+</script>
+
+<script type="text/html" data-help-name="processlink-notify-group">
+  <p>Sends notifications to a ProcessMail notification group. Channel-agnostic:
+  ProcessMail fans out to each member via their preferred contact method (email, SMS).</p>
+
+  <h3>How It Works</h3>
+  <p>Instead of specifying individual email addresses or phone numbers in your Node-RED flow,
+  you reference a <strong>notification group</strong> by its key. The group is managed in
+  the ProcessMail web interface, where org admins can:</p>
+  <ul>
+    <li>Add/remove members (platform users or external contacts)</li>
+    <li>Set each member's preferred contact method (email, SMS, or both)</li>
+    <li>Choose email delivery mode (individual or BCC)</li>
+  </ul>
+  <p>This means the programmer sets up the flow once, and authorised org members can
+  manage who receives notifications without touching Node-RED.</p>
+
+  <h3>Inputs</h3>
+  <dl class="message-properties">
+    <dt>group_key <span class="property-type">string</span></dt>
+    <dd>The notification group key (e.g. <code>maintenance-alerts</code>).
+    Can be set in config or via <code>msg.group_key</code>.</dd>
+
+    <dt>subject <span class="property-type">string</span></dt>
+    <dd>Notification subject (used for emails). Can be set in config or via <code>msg.subject</code>.</dd>
+
+    <dt>body <span class="property-type">string</span></dt>
+    <dd>Notification body. Via config, <code>msg.body</code>, or <code>msg.payload</code>.</dd>
+
+    <dt class="optional">bodyType <span class="property-type">string</span></dt>
+    <dd>"text" (default) or "html". Applies to email recipients.</dd>
+
+    <dt class="optional">file_id <span class="property-type">string</span></dt>
+    <dd>Single file attachment from the upload node. Email recipients receive as attachment;
+    SMS recipients receive as download link.</dd>
+
+    <dt class="optional">attachments <span class="property-type">array</span></dt>
+    <dd>Multiple file attachments. Format: <code>[{ fileId: "uuid" }]</code>.</dd>
+
+    <dt class="optional">linkOnly <span class="property-type">boolean</span></dt>
+    <dd>When <code>true</code>, files are sent as links rather than attachments.</dd>
+  </dl>
+
+  <h3>Outputs</h3>
+  <p>This node has two outputs:</p>
+  <ol>
+    <li><strong>Success</strong> - Notifications sent (may include partial failures)</li>
+    <li><strong>Error</strong> - Request failed completely</li>
+  </ol>
+
+  <h4>Success Output</h4>
+  <dl class="message-properties">
+    <dt>payload.ok <span class="property-type">boolean</span></dt>
+    <dd><code>true</code></dd>
+    <dt>payload.group_key <span class="property-type">string</span></dt>
+    <dd>The group that was notified.</dd>
+    <dt>payload.notifications_sent <span class="property-type">object</span></dt>
+    <dd><code>{ email: 3, sms: 2 }</code> - Breakdown by channel.</dd>
+    <dt>payload.total_recipients <span class="property-type">number</span></dt>
+    <dd>Total unique recipients notified.</dd>
+    <dt>payload.message_ids <span class="property-type">array</span></dt>
+    <dd>ProcessMail log IDs for tracking.</dd>
+    <dt class="optional">payload.failures <span class="property-type">object</span></dt>
+    <dd>Only present if some sends failed. Lists failed email/sms recipients with errors.</dd>
+  </dl>
+
+  <h4>Error Output</h4>
+  <dl class="message-properties">
+    <dt>payload.error <span class="property-type">string</span></dt>
+    <dd>Error message.</dd>
+    <dt>payload.code <span class="property-type">string</span></dt>
+    <dd>Error code: GROUP_NOT_FOUND, EMPTY_GROUP, NO_RECIPIENTS, RATE_LIMIT_EXCEEDED, etc.</dd>
+    <dt>statusCode <span class="property-type">number</span></dt>
+    <dd>HTTP status code, or 0 for network/timeout errors.</dd>
+  </dl>
+
+  <h3>Configuration</h3>
+  <dl class="message-properties">
+    <dt>Group Key</dt>
+    <dd>The key of the notification group in ProcessMail (e.g. <code>maintenance-alerts</code>).
+    Find this in the ProcessMail web interface under Notification Groups.
+    Can also be set dynamically via <code>msg.group_key</code>.</dd>
+    <dt>Subject / Body</dt>
+    <dd>Default values. Config takes priority over msg properties.
+    <code>msg.payload</code> is used as fallback for body.</dd>
+    <dt>Use branded email template</dt>
+    <dd>Wraps emails in the ProcessLink branded template. SMS messages are always plain text.</dd>
+    <dt>Link only</dt>
+    <dd>Files are sent as links instead of attachments for email recipients.</dd>
+  </dl>
+
+  <h3>Setup</h3>
+  <ol>
+    <li>Create a notification group in ProcessMail (<code>/org/your-org/groups</code>)</li>
+    <li>Add members and set their contact preferences</li>
+    <li>Copy the group key</li>
+    <li>Create an API key in Portal with the <code>processmail:notify-group</code> scope</li>
+    <li>Configure this node with the API key and group key</li>
+  </ol>
+
+  <h3>Examples</h3>
+  <h4>Simple Alert</h4>
+  <pre>msg.group_key = "maintenance-alerts";
+msg.subject = "Motor Fault on Line 3";
+msg.body = "Temperature exceeded threshold at 14:32.";
+return msg;</pre>
+
+  <h4>With File Attachment (from upload node)</h4>
+  <pre>[file-in] → [upload] → [notify group]</pre>
+  <p>The <code>msg.file_id</code> from the upload node is automatically included.
+  Email recipients get the file as an attachment. SMS recipients get a download link.</p>
+
+  <h4>Dynamic Group Selection</h4>
+  <pre>// Choose group based on alert severity
+if (msg.payload.severity === "critical") {
+    msg.group_key = "critical-alerts";
+} else {
+    msg.group_key = "general-notifications";
+}
+msg.subject = "Alert: " + msg.payload.message;
+msg.body = msg.payload.details;
+return msg;</pre>
+
+  <h3>API Key Scope</h3>
+  <p>Requires an API key with the <code>processmail:notify-group</code> scope.
+  Create one in Portal under Developers &gt; API Keys.</p>
+
+  <h3>Status Codes</h3>
+  <ul>
+    <li><strong>200</strong> - Notifications sent (check <code>payload.failures</code> for partial failures)</li>
+    <li><strong>400</strong> - Bad request (missing fields, empty group, no valid recipients)</li>
+    <li><strong>401</strong> - Invalid API key</li>
+    <li><strong>403</strong> - Service not enabled or missing scope</li>
+    <li><strong>404</strong> - Notification group not found</li>
+    <li><strong>429</strong> - Daily limit exceeded</li>
+    <li><strong>500</strong> - Server error</li>
+  </ul>
+
+  <h3>References</h3>
+  <ul>
+    <li><a href="https://portal.processlink.com.au" target="_blank">Process Link Portal</a></li>
+    <li><a href="https://github.com/process-link/node-red-contrib-processlink" target="_blank">GitHub</a></li>
+  </ul>
+</script>
