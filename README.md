@@ -30,6 +30,7 @@ Connect your Node-RED flows to the [Process Link](https://processlink.com.au) pl
 | **files upload** | Upload files to Process Link Files API |
 | **send email** | Send emails via ProcessMail API (with optional attachments) |
 | **send SMS** | Send SMS messages via ProcessMail API (Twilio) |
+| **notify group** | Send notifications to a managed group via ProcessMail (email + SMS) |
 | **system info** | Output system diagnostics (hostname, memory, disk, uptime, etc.) |
 
 ## Installation
@@ -245,6 +246,107 @@ Phone numbers must be in **E.164 format**: `+` followed by country code and numb
 
 ---
 
+## Notify Group
+
+Sends notifications to a ProcessMail notification group. Channel-agnostic: ProcessMail delivers to each member via their preferred contact method (email, SMS, or both).
+
+### How It Works
+
+Instead of specifying individual email addresses or phone numbers in your Node-RED flow, you reference a **notification group** by its key. Groups are managed in the ProcessMail web interface, where org admins can:
+
+- Add/remove members (platform users or external contacts)
+- Set each member's preferred contact method (email, SMS, or both)
+
+This means the programmer sets up the flow once, and authorised org members can manage who receives notifications without touching Node-RED.
+
+### Configuration
+
+| Property | Description |
+|----------|-------------|
+| Config | Your Process Link credentials (API Key) |
+| Group Key | The notification group key (e.g. `maintenance-alerts`) |
+| Subject | Notification subject (used for emails) |
+| Body | Notification body content |
+| Body Type | Plain Text or HTML (applies to email recipients) |
+| Use branded email template | Wraps emails in the ProcessLink branded template. SMS is always plain text |
+| Link only | When files are attached via the upload node, send them as download links instead of email attachments. Useful for large files. Has no effect if no files are attached |
+| Timeout | Request timeout in milliseconds (default: 30000) |
+
+### Inputs
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `msg.group_key` | string | Notification group key (e.g. `maintenance-alerts`) |
+| `msg.subject` | string | Notification subject |
+| `msg.body` | string | Notification body (fallback: `msg.payload`) |
+| `msg.bodyType` | string | *(Optional)* "text" (default) or "html" |
+| `msg.file_id` | string | *(Optional)* Single file attachment from upload node |
+| `msg.attachments` | array | *(Optional)* Multiple attachments: `[{ fileId: "uuid" }]` |
+| `msg.linkOnly` | boolean | *(Optional)* Send files as links instead of attachments |
+
+### Outputs
+
+| Output | When | Properties |
+|--------|------|------------|
+| **1 - Success** | Notifications sent | `msg.payload.ok`, `msg.payload.notifications_sent`, `msg.payload.total_recipients`, `msg.group_key` |
+| **2 - Error** | Request failed | `msg.payload.error`, `msg.payload.code`, `msg.statusCode` |
+
+**Success payload:**
+- `notifications_sent` - `{ email: 3, sms: 2 }` breakdown by channel
+- `total_recipients` - total unique recipients notified
+- `message_ids` - ProcessMail log IDs for tracking
+- `failures` - *(only if partial failures)* lists failed recipients with errors
+
+### Examples
+
+**Simple alert:**
+```javascript
+msg.group_key = "maintenance-alerts";
+msg.subject = "Motor Fault on Line 3";
+msg.body = "Temperature exceeded threshold at 14:32.";
+return msg;
+```
+
+**With file attachment (from upload node):**
+```
+[file-in] → [upload] → [notify group]
+```
+The `msg.file_id` from the upload node is automatically included. Email recipients get the file as an attachment. SMS recipients get a download link.
+
+**Dynamic group selection:**
+```javascript
+if (msg.payload.severity === "critical") {
+    msg.group_key = "critical-alerts";
+} else {
+    msg.group_key = "general-notifications";
+}
+msg.subject = "Alert: " + msg.payload.message;
+msg.body = msg.payload.details;
+return msg;
+```
+
+### Setup
+
+1. Create a notification group in ProcessMail (`/org/your-org/groups`)
+2. Add members and set their contact preferences
+3. Copy the group key
+4. Create an API key in Portal with the `processmail:notify-group` scope
+5. Configure this node with the API key and group key
+
+### Status Codes
+
+| Code | Meaning |
+|------|---------|
+| 200 | Notifications sent (check `payload.failures` for partial failures) |
+| 400 | Bad request (missing fields, empty group, no valid recipients) |
+| 401 | Invalid API key |
+| 403 | Service not enabled or missing scope |
+| 404 | Notification group not found |
+| 429 | Daily limit exceeded |
+| 500 | Server error |
+
+---
+
 ## System Info
 
 Outputs system information for diagnostics and monitoring.
@@ -404,7 +506,7 @@ Copy the JSON below and import into Node-RED: **Menu → Import → Clipboard**
 ## Requirements
 
 - Node-RED >= 2.0.0
-- Node.js >= 14.0.0
+- Node.js >= 18.0.0
 
 ## Support
 
