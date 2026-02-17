@@ -5,3 +5,6 @@ coverage/
 
 # Local demo flow with real credentials (not for publishing)
 examples/demo-flow.local.json
+
+# Claude Code local settings (personal permissions)
+.claude/settings.local.json
