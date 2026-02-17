@@ -406,9 +406,29 @@ Outputs system information for diagnostics and monitoring.
 
 ---
 
-## Example Flow
+## Example Flows
 
-Copy the JSON below and import into Node-RED: **Menu → Import → Clipboard**
+We include a comprehensive demo flow with examples for every node. Import it into Node-RED to get started quickly.
+
+**📥 [Download the full demo flow →](https://github.com/process-link/node-red-contrib-processlink/blob/main/examples/demo-flow.json)**
+
+The demo flow includes 9 ready-to-use examples:
+
+1. **File Upload** - Read a file and upload to Process Link
+2. **File Upload with Timestamp** - Auto-prefix filenames with date/time
+3. **File Upload to Folder** - Upload to a specific area/folder
+4. **Send Email** - Send a plain text email
+5. **Send Email with Attachment** - Upload a file then email it
+6. **Send SMS** - Send an SMS alert
+7. **System Info** - Output device diagnostics
+8. **Notify Group** - Send alerts to a managed notification group
+9. **Upload + Notify Group** - Upload a file and notify a group with the attachment
+
+To import: copy the JSON from the demo flow file, then in Node-RED go to **Menu → Import → Clipboard** and paste.
+
+### Quick Start Example
+
+Here's a minimal file upload flow to get you started:
 
 ```json
 [
@@ -494,6 +514,8 @@ Copy the JSON below and import into Node-RED: **Menu → Import → Clipboard**
 2. Double-click the **Upload to Process Link** node → click the pencil icon → enter your **Site ID** and **API Key**
 3. Click **Deploy**
 4. Click the inject button to upload
+
+> **Want more?** See the [examples folder](https://github.com/process-link/node-red-contrib-processlink/tree/main/examples) for the full demo flow covering all nodes.
 
 ---
 

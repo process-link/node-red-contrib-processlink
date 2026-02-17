@@ -54,8 +54,10 @@
   <h3>Inputs</h3>
   <dl class="message-properties">
     <dt>to <span class="property-type">string | string[]</span></dt>
-    <dd>Recipient phone number(s) in E.164 format (e.g., <code>+61412345678</code>).
-    Can be set in config or via <code>msg.to</code>.</dd>
+    <dd>Recipient phone number in E.164 format (e.g., <code>+61412345678</code>).
+    Can be set in the node config (single number only) or via <code>msg.to</code>.
+    To send to <strong>multiple recipients</strong>, use <code>msg.to</code> with a JSON array
+    (see examples below). The config <strong>To</strong> field only supports one number.</dd>
 
     <dt>body <span class="property-type">string</span></dt>
     <dd>SMS message text via <code>msg.body</code>. Config body takes priority.</dd>
@@ -101,7 +103,9 @@
   <dl class="message-properties">
     <dt>To</dt>
     <dd>Default recipient phone number in E.164 format (<code>+</code> followed by country code and number).
-    Leave blank to use <code>msg.to</code>. Config takes priority.</dd>
+    <strong>Only one number is supported in this field.</strong>
+    Leave blank to use <code>msg.to</code> instead (which supports multiple recipients as a JSON array).
+    Config takes priority over <code>msg.to</code>.</dd>
     <dt>Body</dt>
     <dd>Default message text. Leave blank to use <code>msg.body</code>.</dd>
     <dt>Timeout</dt>
@@ -126,17 +130,27 @@
   <p>Each segment counts as one SMS for billing purposes.</p>
 
   <h3>Examples</h3>
-  <h4>Simple Alert</h4>
+
+  <h4>Simple Alert (Function node)</h4>
   <pre>msg.to = "+61412345678";
 msg.body = "ALERT: Temperature exceeded 85C on Line 3";
 return msg;</pre>
 
-  <h4>Multi-Recipient Broadcast</h4>
+  <h4>Multi-Recipient Broadcast (Function node)</h4>
+  <p>To send to multiple recipients, set <code>msg.to</code> as an array in a
+  <strong>Function node</strong> and leave the send SMS node's <strong>To</strong> field blank:</p>
   <pre>msg.to = ["+61412345678", "+61423456789"];
 msg.body = "Shift change reminder: Next shift starts at 14:00";
 return msg;</pre>
 
-  <h4>Dynamic Message</h4>
+  <h4>Multi-Recipient (Inject node)</h4>
+  <p>You can also use an <strong>Inject node</strong> — set <code>msg.to</code> with
+  the type set to <strong>JSON</strong> (not string), then enter:</p>
+  <pre>["+61412345678", "+61423456789"]</pre>
+  <p><strong>Important:</strong> The type must be <strong>JSON</strong> (<code>{}</code> icon),
+  not string (<code>a-z</code> icon). Each number must be wrapped in double quotes.</p>
+
+  <h4>Dynamic Message (Function node)</h4>
   <pre>msg.to = "+61412345678";
 msg.body = "Equipment maintenance due tomorrow";
 return msg;</pre>
