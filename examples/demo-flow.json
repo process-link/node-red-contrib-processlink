@@ -12,7 +12,7 @@
         "type": "comment",
         "z": "e453f86ed59b6b3d",
         "name": "ProcessLink Demo Flow - Double-click to read",
-        "info": "# ProcessLink Demo Flow\n\nThis flow demonstrates the ProcessLink\nnodes for Node-RED.\n\n## Setup Required\n\nThis demo includes two config nodes:\n\n1. **Files API (Site Scope)**\n   - Used for file uploads\n   - Requires a Site-scoped API key\n   - Set your Site ID in the config\n\n2. **Email & SMS API (Org Scope)**\n   - Used for sending emails and SMS\n   - Requires an Org-scoped API key\n   - Leave Site ID blank\n\n## How to configure\n\n1. Double-click any ProcessLink node\n2. Click the pencil icon next to Config\n3. Enter your API key from the Portal\n4. Save and deploy\n\n## Examples\n\n1. CSV Generation\n2. System Info\n3. Simple File Upload\n4. Upload + Email (with attachment)\n5. Upload + Email (link only)\n6. Send Email Only\n7. Send SMS Alert",
+        "info": "# ProcessLink Demo Flow\n\nThis flow demonstrates the ProcessLink\nnodes for Node-RED.\n\n## Setup Required\n\nThis demo includes two config nodes:\n\n1. **Files API (Site Scope)**\n   - Used for file uploads\n   - Requires a Site-scoped API key\n   - Set your Site ID in the config\n\n2. **Email & SMS API (Org Scope)**\n   - Used for sending emails, SMS,\n     and group notifications\n   - Requires an Org-scoped API key\n   - Leave Site ID blank\n\n## How to configure\n\n1. Double-click any ProcessLink node\n2. Click the pencil icon next to Config\n3. Enter your API key from the Portal\n4. Save and deploy\n\n## Examples\n\n1. CSV Generation\n2. System Info\n3. Simple File Upload\n4. Upload + Email (with attachment)\n5. Upload + Email (link only)\n6. Send Email Only\n7. Send SMS Alert\n8. Notify Group (simple alert)\n9. Upload + Notify Group (with attachment)",
         "x": 180,
         "y": 20,
         "wires": []
@@ -896,6 +896,330 @@
                 "sms_node_7"
             ]
         ]
+    },
+    {
+        "id": "notify_comment_8",
+        "type": "comment",
+        "z": "e453f86ed59b6b3d",
+        "name": "8. Notify Group (simple alert)",
+        "info": "# Notify Group (Simple Alert)\n\nSends a notification to a managed group.\n\n## What it does\n\n- Sends to all members of a group\n- Each member gets email or SMS\n  based on their preferences\n- Group is managed in ProcessMail\n\n## Setup\n\n1. Create a group in ProcessMail\n2. Add members with contact prefs\n3. Copy the group key\n4. Set it in msg.group_key\n\n## Outputs\n\n- Top: Notifications sent\n- Bottom: Error details",
+        "x": 150,
+        "y": 1400,
+        "wires": []
+    },
+    {
+        "id": "notify_inject_8",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Trigger Notify Group",
+        "props": [
+            {
+                "p": "group_key",
+                "v": "maintenance-alerts",
+                "vt": "str"
+            },
+            {
+                "p": "subject",
+                "v": "Motor Fault on Line 3",
+                "vt": "str"
+            },
+            {
+                "p": "body",
+                "v": "Temperature exceeded threshold at 14:32. Please investigate.",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 1460,
+        "wires": [
+            [
+                "notify_node_8"
+            ]
+        ]
+    },
+    {
+        "id": "notify_node_8",
+        "type": "processlink-notify-group",
+        "z": "e453f86ed59b6b3d",
+        "name": "Notify Group",
+        "server": "config_org_email_sms",
+        "groupKey": "",
+        "subject": "",
+        "body": "",
+        "bodyType": "text",
+        "useTemplate": true,
+        "linkOnly": false,
+        "timeout": "30000",
+        "x": 410,
+        "y": 1460,
+        "wires": [
+            [
+                "notify_success_8"
+            ],
+            [
+                "notify_error_8"
+            ]
+        ]
+    },
+    {
+        "id": "notify_success_8",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "8. Notify Sent",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 1440,
+        "wires": []
+    },
+    {
+        "id": "notify_error_8",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "8. Notify Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 1480,
+        "wires": []
+    },
+    {
+        "id": "notify_inject_dynamic_8",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Notify - Critical Alerts",
+        "props": [
+            {
+                "p": "group_key",
+                "v": "critical-alerts",
+                "vt": "str"
+            },
+            {
+                "p": "subject",
+                "v": "CRITICAL: System Shutdown Required",
+                "vt": "str"
+            },
+            {
+                "p": "body",
+                "v": "Pressure sensor reading exceeded safety limit. Immediate action required.",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 150,
+        "y": 1500,
+        "wires": [
+            [
+                "notify_node_8"
+            ]
+        ]
+    },
+    {
+        "id": "notify_comment_9",
+        "type": "comment",
+        "z": "e453f86ed59b6b3d",
+        "name": "9. Upload + Notify Group (with attachment)",
+        "info": "# Upload + Notify Group\n\nUploads a file then notifies a group\nwith the file attached.\n\n## What it does\n\n- Reads and uploads file to Files app\n- On success, notifies the group\n- Email members get file as attachment\n- SMS members get a download link\n\n## Chaining nodes\n\nUpload success output connects\ndirectly to Notify Group node.\nThe file_id passes automatically.\n\n## Outputs\n\n- Upload Success/Error from upload\n- Notify Sent/Error from notify node",
+        "x": 170,
+        "y": 1600,
+        "wires": []
+    },
+    {
+        "id": "notify_inject_9",
+        "type": "inject",
+        "z": "e453f86ed59b6b3d",
+        "name": "Trigger Upload + Notify",
+        "props": [
+            {
+                "p": "filename",
+                "v": "/tmp/output.csv",
+                "vt": "str"
+            },
+            {
+                "p": "group_key",
+                "v": "maintenance-alerts",
+                "vt": "str"
+            },
+            {
+                "p": "subject",
+                "v": "New Report Available",
+                "vt": "str"
+            },
+            {
+                "p": "body",
+                "v": "A new sensor data report has been uploaded and is attached.",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 140,
+        "y": 1660,
+        "wires": [
+            [
+                "notify_filein_9"
+            ]
+        ]
+    },
+    {
+        "id": "notify_filein_9",
+        "type": "file in",
+        "z": "e453f86ed59b6b3d",
+        "name": "Read File",
+        "filename": "/tmp/output.csv",
+        "filenameType": "str",
+        "format": "",
+        "chunk": false,
+        "sendError": false,
+        "encoding": "none",
+        "allProps": true,
+        "x": 340,
+        "y": 1660,
+        "wires": [
+            [
+                "notify_upload_9"
+            ]
+        ]
+    },
+    {
+        "id": "notify_upload_9",
+        "type": "processlink-files-upload",
+        "z": "e453f86ed59b6b3d",
+        "name": "Upload to ProcessLink",
+        "server": "config_site_files",
+        "filename": "sensor-report",
+        "areaId": "",
+        "folderId": "",
+        "timestampPrefix": true,
+        "timeout": "30000",
+        "apiUrl": "https://files.processlink.com.au/api/v1/sites/{siteId}/files/upload",
+        "x": 540,
+        "y": 1660,
+        "wires": [
+            [
+                "notify_group_9",
+                "notify_upload_success_9"
+            ],
+            [
+                "notify_upload_error_9"
+            ]
+        ]
+    },
+    {
+        "id": "notify_group_9",
+        "type": "processlink-notify-group",
+        "z": "e453f86ed59b6b3d",
+        "name": "Notify Group",
+        "server": "config_org_email_sms",
+        "groupKey": "",
+        "subject": "",
+        "body": "",
+        "bodyType": "text",
+        "useTemplate": true,
+        "linkOnly": false,
+        "timeout": "30000",
+        "x": 830,
+        "y": 1660,
+        "wires": [
+            [
+                "notify_sent_9"
+            ],
+            [
+                "notify_err_9"
+            ]
+        ]
+    },
+    {
+        "id": "notify_upload_success_9",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "9. Upload Success",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 870,
+        "y": 1720,
+        "wires": []
+    },
+    {
+        "id": "notify_upload_error_9",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "9. Upload Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 1760,
+        "wires": []
+    },
+    {
+        "id": "notify_sent_9",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "9. Notify Sent",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1060,
+        "y": 1640,
+        "wires": []
+    },
+    {
+        "id": "notify_err_9",
+        "type": "debug",
+        "z": "e453f86ed59b6b3d",
+        "name": "9. Notify Error",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1060,
+        "y": 1680,
+        "wires": []
     },
     {
         "id": "config_site_files",
