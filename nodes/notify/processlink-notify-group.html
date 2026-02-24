@@ -49,7 +49,7 @@
   </div>
   <div class="form-row">
     <label for="node-input-body"><i class="fa fa-file-text-o"></i> Body</label>
-    <input type="text" id="node-input-body" placeholder="msg.body or msg.payload" />
+    <input type="text" id="node-input-body" placeholder="msg.body" />
   </div>
   <div class="form-row">
     <label for="node-input-bodyType"><i class="fa fa-code"></i> Body Type</label>
@@ -101,7 +101,7 @@
     <dd>Notification subject (used for emails). Can be set in config or via <code>msg.subject</code>.</dd>
 
     <dt>body <span class="property-type">string</span></dt>
-    <dd>Notification body. Via config, <code>msg.body</code>, or <code>msg.payload</code>.</dd>
+    <dd>Notification body. Via config or <code>msg.body</code>.</dd>
 
     <dt class="optional">bodyType <span class="property-type">string</span></dt>
     <dd>"text" (default) or "html". Applies to email recipients.</dd>
@@ -157,8 +157,7 @@
     Find this in the ProcessMail web interface under Notification Groups.
     Can also be set dynamically via <code>msg.group_key</code>.</dd>
     <dt>Subject / Body</dt>
-    <dd>Default values. Config takes priority over msg properties.
-    <code>msg.payload</code> is used as fallback for body.</dd>
+    <dd>Default values. Config takes priority over msg properties.</dd>
     <dt>Use branded email template</dt>
     <dd>Wraps emails in the ProcessLink branded template. SMS messages are always plain text.</dd>
     <dt>Link only</dt>

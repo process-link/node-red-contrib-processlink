@@ -96,7 +96,7 @@ Uploads files to the Process Link Files API.
 | Prefix with timestamp | Adds `YYYY-MM-DD_HH-mm-ss_` prefix to filename (ISO 8601 format) |
 | Timeout | Request timeout in milliseconds (default: 30000) |
 
-**Filename priority:** Config filename → `msg.filename` → `unknown-file`
+**Filename priority:** Config filename → `msg.filename` → `file.bin`
 
 **Location:** The dropdown shows your site's folder structure organized by area. Select where uploaded files should be stored. Areas and folders are fetched from the Files API when you open the node configuration.
 
@@ -216,7 +216,6 @@ Sends SMS messages via the ProcessMail API using Twilio.
 |----------|------|-------------|
 | `msg.to` | string \| string[] | Recipient phone number(s) in E.164 format |
 | `msg.body` | string | SMS message text |
-| `msg.payload` | string | *(Fallback)* Used as body if `msg.body` is not set |
 
 ### Outputs
 
@@ -278,7 +277,7 @@ This means the programmer sets up the flow once, and authorised org members can 
 |----------|------|-------------|
 | `msg.group_key` | string | Notification group key (e.g. `maintenance-alerts`) |
 | `msg.subject` | string | Notification subject |
-| `msg.body` | string | Notification body (fallback: `msg.payload`) |
+| `msg.body` | string | Notification body |
 | `msg.bodyType` | string | *(Optional)* "text" (default) or "html" |
 | `msg.file_id` | string | *(Optional)* Single file attachment from upload node |
 | `msg.attachments` | array | *(Optional)* Multiple attachments: `[{ fileId: "uuid" }]` |

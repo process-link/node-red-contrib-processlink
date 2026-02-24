@@ -83,7 +83,7 @@ module.exports = function (RED) {
       let total, free, used;
 
       if (platform === "win32") {
-        // Windows: use wmic
+        // SECURITY: Hardcoded command - do NOT concatenate user input
         const { stdout } = await execAsync(
           "wmic logicaldisk where drivetype=3 get size,freespace",
           { timeout: 5000 }
@@ -103,7 +103,7 @@ module.exports = function (RED) {
           used = total - free;
         }
       } else {
-        // Linux/Mac: use df
+        // SECURITY: Hardcoded command - do NOT concatenate user input
         const { stdout } = await execAsync("df -B1 / | tail -1", { timeout: 5000 });
         const parts = stdout.trim().split(/\s+/);
         if (parts.length >= 4) {
@@ -240,6 +240,7 @@ module.exports = function (RED) {
   function ProcessLinkSystemInfoNode(config) {
     RED.nodes.createNode(this, config);
     const node = this;
+    let statusTimer;
 
     // Record when this node was created (proxy for Node-RED start time)
     const nodeRedStartTime = Date.now();
@@ -256,11 +257,13 @@ module.exports = function (RED) {
             shape: "dot",
             text: `sent @ ${new Date().toLocaleTimeString()}`,
           });
-          setTimeout(() => node.status({}), 5000);
+          if (statusTimer) clearTimeout(statusTimer);
+          statusTimer = setTimeout(() => node.status({}), 5000);
         } catch (err) {
           node.status({ fill: "red", shape: "ring", text: "error" });
           node.error(err);
-          setTimeout(() => node.status({}), 10000);
+          if (statusTimer) clearTimeout(statusTimer);
+          statusTimer = setTimeout(() => node.status({}), 10000);
         }
       }, 1000);
     }
@@ -286,15 +289,18 @@ module.exports = function (RED) {
         done();
 
         // Clear status after 5 seconds
-        setTimeout(() => node.status({}), 5000);
+        if (statusTimer) clearTimeout(statusTimer);
+        statusTimer = setTimeout(() => node.status({}), 5000);
       } catch (err) {
         node.status({ fill: "red", shape: "ring", text: "error" });
         done(err);
-        setTimeout(() => node.status({}), 10000);
+        if (statusTimer) clearTimeout(statusTimer);
+        statusTimer = setTimeout(() => node.status({}), 10000);
       }
     });
 
     node.on("close", function () {
+      if (statusTimer) clearTimeout(statusTimer);
       node.status({});
     });
   }

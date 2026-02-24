@@ -27,6 +27,7 @@ module.exports = function (RED) {
   function ProcessLinkFilesUploadNode(config) {
     RED.nodes.createNode(this, config);
     const node = this;
+    let statusTimer;
 
     // Get the config node
     this.server = RED.nodes.getNode(config.server);
@@ -98,7 +99,7 @@ module.exports = function (RED) {
           }
         }
       } else {
-        basename = (msg.filename || "unknown-file").split(/[\\/]/).pop();
+        basename = (msg.filename || "file.bin").split(/[\\/]/).pop();
       }
 
       // Add timestamp prefix if enabled
@@ -170,6 +171,15 @@ module.exports = function (RED) {
 
         res.on("data", (chunk) => {
           responseData += chunk;
+          if (responseData.length > 1024 * 1024) {
+            req.destroy();
+            node.status({ fill: "red", shape: "ring", text: "response too large" });
+            msg.payload = { error: "API response exceeded 1MB limit" };
+            msg.statusCode = 0;
+            send([null, msg]);
+            done(new Error("API response exceeded 1MB limit"));
+            return;
+          }
         });
 
         res.on("end", () => {
@@ -196,7 +206,8 @@ module.exports = function (RED) {
             done();
 
             // Clear status after 5 seconds
-            setTimeout(() => node.status({}), 5000);
+            if (statusTimer) clearTimeout(statusTimer);
+            statusTimer = setTimeout(() => node.status({}), 5000);
           } else {
             // API error - send to output 2
             const errorMsg = parsedResponse.error || parsedResponse.message || `HTTP ${res.statusCode}`;
@@ -206,7 +217,8 @@ module.exports = function (RED) {
             done();
 
             // Clear status after 10 seconds
-            setTimeout(() => node.status({}), 10000);
+            if (statusTimer) clearTimeout(statusTimer);
+            statusTimer = setTimeout(() => node.status({}), 10000);
           }
         });
       });
@@ -218,11 +230,12 @@ module.exports = function (RED) {
         send([null, msg]);
         done(err);
 
-        setTimeout(() => node.status({}), 10000);
+        if (statusTimer) clearTimeout(statusTimer);
+        statusTimer = setTimeout(() => node.status({}), 10000);
       });
 
       // Set timeout
-      const timeout = parseInt(config.timeout) || 30000;
+      const timeout = Math.max(5000, Math.min(300000, parseInt(config.timeout, 10) || 30000));
       req.setTimeout(timeout, () => {
         req.destroy();
         node.status({ fill: "red", shape: "ring", text: "timeout" });
@@ -231,7 +244,8 @@ module.exports = function (RED) {
         send([null, msg]);
         done(new Error("Request timed out"));
 
-        setTimeout(() => node.status({}), 10000);
+        if (statusTimer) clearTimeout(statusTimer);
+        statusTimer = setTimeout(() => node.status({}), 10000);
       });
 
       req.write(body);
@@ -239,6 +253,7 @@ module.exports = function (RED) {
     });
 
     node.on("close", function () {
+      if (statusTimer) clearTimeout(statusTimer);
       node.status({});
     });
   }

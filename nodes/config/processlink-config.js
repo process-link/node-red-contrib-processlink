@@ -63,7 +63,7 @@ module.exports = function (RED) {
           };
         }
 
-        console.log(`[ProcessLink] Following redirect to: ${redirectOptions.hostname}${redirectOptions.path}`);
+        RED.log.debug(`[ProcessLink] Following redirect to: ${redirectOptions.hostname}${redirectOptions.path}`);
         httpsGet(redirectOptions, callback, redirectCount + 1);
         return;
       }
@@ -126,7 +126,7 @@ module.exports = function (RED) {
     const overallTimeout = setTimeout(() => {
       if (!hasError && !hasTimedOut) {
         hasTimedOut = true;
-        console.log(`[ProcessLink] Overall timeout reached for locations request`);
+        RED.log.warn(`[ProcessLink] Overall timeout reached for locations request`);
         res.status(504).json({ error: "Request timed out" });
       }
     }, OVERALL_TIMEOUT);
@@ -150,7 +150,7 @@ module.exports = function (RED) {
       (areasRes, err) => {
         if (hasTimedOut) return;
         if (err) {
-          console.log(`[ProcessLink] Areas request error:`, err.message);
+          RED.log.warn(`[ProcessLink] Areas request error: ${err.message}`);
           if (!hasError && !hasTimedOut) {
             hasError = true;
             clearTimeout(overallTimeout);
@@ -162,17 +162,17 @@ module.exports = function (RED) {
         areasRes.on("data", (chunk) => (data += chunk));
         areasRes.on("end", () => {
           if (areasRes.statusCode !== 200) {
-            console.log(`[ProcessLink] Areas API returned ${areasRes.statusCode}: ${data.substring(0, 200)}`);
+            RED.log.warn(`[ProcessLink] Areas API returned ${areasRes.statusCode}: ${data.substring(0, 200)}`);
             areasData = [];
           } else {
             try {
               areasData = JSON.parse(data);
               if (!Array.isArray(areasData)) {
-                console.log(`[ProcessLink] Areas API returned non-array:`, areasData);
+                RED.log.warn(`[ProcessLink] Areas API returned non-array`);
                 areasData = [];
               }
             } catch (e) {
-              console.log(`[ProcessLink] Areas API parse error:`, e.message);
+              RED.log.warn(`[ProcessLink] Areas API parse error: ${e.message}`);
               areasData = [];
             }
           }
@@ -192,7 +192,7 @@ module.exports = function (RED) {
       (foldersRes, err) => {
         if (hasTimedOut) return;
         if (err) {
-          console.log(`[ProcessLink] Folders request error:`, err.message);
+          RED.log.warn(`[ProcessLink] Folders request error: ${err.message}`);
           if (!hasError && !hasTimedOut) {
             hasError = true;
             clearTimeout(overallTimeout);
@@ -204,17 +204,17 @@ module.exports = function (RED) {
         foldersRes.on("data", (chunk) => (data += chunk));
         foldersRes.on("end", () => {
           if (foldersRes.statusCode !== 200) {
-            console.log(`[ProcessLink] Folders API returned ${foldersRes.statusCode}: ${data.substring(0, 200)}`);
+            RED.log.warn(`[ProcessLink] Folders API returned ${foldersRes.statusCode}: ${data.substring(0, 200)}`);
             foldersData = [];
           } else {
             try {
               foldersData = JSON.parse(data);
               if (!Array.isArray(foldersData)) {
-                console.log(`[ProcessLink] Folders API returned non-array:`, foldersData);
+                RED.log.warn(`[ProcessLink] Folders API returned non-array`);
                 foldersData = [];
               }
             } catch (e) {
-              console.log(`[ProcessLink] Folders API parse error:`, e.message);
+              RED.log.warn(`[ProcessLink] Folders API parse error: ${e.message}`);
               foldersData = [];
             }
           }
