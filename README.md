@@ -19,415 +19,106 @@
 
 ---
 
-## Overview
+## What's Included
 
-Connect your Node-RED flows to the [Process Link](https://processlink.com.au) platform. Upload files, send notifications, and integrate with industrial automation systems.
+| Node | What it does |
+|------|--------------|
+| **files upload** | Upload files to Process Link |
+| **send email** | Send emails with optional file attachments |
+| **send SMS** | Send SMS messages |
+| **notify group** | Notify a managed group (email + SMS) |
+| **system info** | Output device diagnostics (hostname, memory, disk, uptime, etc.) |
 
-## Available Nodes
-
-| Node | Description |
-|------|-------------|
-| **files upload** | Upload files to Process Link Files API |
-| **send email** | Send emails via ProcessMail API (with optional attachments) |
-| **send SMS** | Send SMS messages via ProcessMail API (Twilio) |
-| **notify group** | Send notifications to a managed group via ProcessMail (email + SMS) |
-| **system info** | Output system diagnostics (hostname, memory, disk, uptime, etc.) |
+All messaging nodes use the ProcessMail API and output on two pins: success (1) and error (2). System info has a single output.
 
 ## Installation
 
-### Via Node-RED Palette Manager (Recommended)
+**Palette Manager (recommended):** Menu > Manage palette > Install > search `@processlink/node-red-contrib-processlink`
 
-1. Open Node-RED
-2. Go to **Menu → Manage palette → Install**
-3. Search for `@processlink/node-red-contrib-processlink`
-4. Click **Install**
-
-### Via npm
-
+**npm:**
 ```bash
 cd ~/.node-red
 npm install @processlink/node-red-contrib-processlink
 ```
 
-Then restart Node-RED.
-
-## Quick Start
-
-### 1. Get Your Credentials
+## Getting Started
 
 1. Log in to the [Process Link Portal](https://portal.processlink.com.au)
-2. Go to **Developer → API Keys**
-3. Click **Generate API Key**
-4. Copy your **Site ID** and **API Key**
-
-### 2. Add and Configure a Node
-
-1. Find the **files upload** node in the palette under "Process Link"
-2. Drag it into your flow
-3. Double-click to configure
-4. Click the pencil icon next to "Config"
-5. Enter your **Site ID** and **API Key**
-6. Click **Add**, then **Done**
-
-### 3. Connect Your Flow
+2. Go to **Developer > API Keys** and generate a key
+3. Copy your **Site ID** and **API Key**
+4. In Node-RED, drag any Process Link node into your flow
+5. Double-click it, click the pencil icon next to "Config", and enter your credentials
 
 ```
-[Inject] → [File In] → [files upload] ─┬─ Output 1 (success) → [Debug]
-                                       └─ Output 2 (error)   → [Debug]
+[Inject] > [File In] > [files upload] --+-- success > [Debug]
+                                        +-- error   > [Debug]
 ```
 
 ---
 
 ## Node Reference
 
----
+### Files Upload
 
-## Files Upload
+Uploads files to Process Link.
 
-Uploads files to the Process Link Files API.
+**Config:** Set a filename (overrides `msg.filename`), pick a destination folder, and optionally prefix filenames with a timestamp.
 
-### Configuration
+**Input:** `msg.payload` (Buffer or string) with the file content. `msg.filename` as an optional fallback.
 
-| Property | Description |
-|----------|-------------|
-| Config | Your Process Link credentials (Site ID + API Key) |
-| Filename | Filename for uploaded file (takes priority over `msg.filename`) |
-| Location | Destination area/folder in the Files app (default: site root) |
-| Prefix with timestamp | Adds `YYYY-MM-DD_HH-mm-ss_` prefix to filename (ISO 8601 format) |
-| Timeout | Request timeout in milliseconds (default: 30000) |
+**Success output:** `msg.file_id`, `msg.statusCode` (201)
 
-**Filename priority:** Config filename → `msg.filename` → `file.bin`
+### Send Email
 
-**Location:** The dropdown shows your site's folder structure organized by area. Select where uploaded files should be stored. Areas and folders are fetched from the Files API when you open the node configuration.
+Sends emails via ProcessMail. Supports To, CC, BCC, Reply-To, plain text or HTML body.
 
-**Timestamp prefix:** When enabled, always prepends the current date/time to the filename, regardless of whether it came from config or `msg.filename`.
+**Input:** `msg.to`, `msg.subject`, `msg.body`, `msg.bodyType` ("text" or "html")
 
-### Inputs
+**Attachments:** Connect an upload node first — `msg.file_id` is picked up automatically. For multiple files, collect IDs into `msg.attachments` as `[{ fileId: "uuid" }]`.
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `msg.payload` | Buffer \| string | The file content to upload |
-| `msg.filename` | string | *(Optional)* Fallback filename if not set in config |
+**Success output:** `msg.email_id`, `msg.statusCode` (200)
 
-### Outputs
+### Send SMS
 
-This node has **two outputs**:
+Sends SMS messages via ProcessMail. Phone numbers must be in E.164 format (`+61412345678`).
 
-| Output | When | Properties |
-|--------|------|------------|
-| **1 - Success** | HTTP 201 | `msg.payload.ok`, `msg.payload.file_id`, `msg.file_id`, `msg.statusCode` |
-| **2 - Error** | API error, network error, timeout | `msg.payload.error`, `msg.statusCode` |
+**Input:** `msg.to` (string or array), `msg.body`
 
-### Status Indicators
+**Success output:** `msg.message_id`, `msg.payload.segment_count`, `msg.statusCode` (200)
 
-| Color | Meaning |
-|-------|---------|
-| 🔴 Red | Error occurred |
-| 🟡 Yellow | Uploading in progress |
-| 🟢 Green | Upload successful |
+### Notify Group
 
-### Status Codes
+Sends notifications to a managed group. Instead of hardcoding recipients in your flow, you reference a group key (e.g. `maintenance-alerts`). Org admins manage members and their preferred channels (email, SMS, or both) in ProcessMail — no flow changes needed.
 
-| Code | Meaning |
-|------|---------|
-| 201 | Success |
-| 400 | Bad request |
-| 401 | Invalid API key |
-| 403 | API access not enabled |
-| 404 | Site not found |
-| 429 | Rate limit exceeded (max 30/min) |
-| 507 | Storage limit exceeded |
+**Input:** `msg.group_key`, `msg.subject`, `msg.body`
 
----
+**Options:** Branded email template, link-only attachments (sends download links instead of inline files), HTML body support.
 
-## Send Email
+**Attachments:** Same as send email — connect an upload node or pass `msg.attachments`.
 
-Sends emails via the ProcessMail API with optional file attachments.
+**Success output:** `msg.payload.notifications_sent` (e.g. `{ email: 3, sms: 2 }`), `msg.payload.total_recipients`
 
-### Configuration
+**Setup:**
+1. Create a notification group in ProcessMail
+2. Add members and set contact preferences
+3. Use the group key in this node
 
-| Property | Description |
-|----------|-------------|
-| Config | Your Process Link credentials (API Key) |
-| To | Recipient email address(es) |
-| Subject | Email subject line |
-| Body | Email body content |
-| Body Type | Plain Text or HTML |
-| CC / BCC | Optional carbon copy recipients |
-| Reply-To | Optional reply-to address |
-| Timeout | Request timeout in milliseconds (default: 30000) |
+### System Info
 
-### Inputs
+Outputs system diagnostics: hostname, platform, OS, CPU, memory, disk, network, uptime, Node-RED version, and more.
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `msg.to` | string \| string[] | Recipient email address(es) |
-| `msg.subject` | string | Email subject |
-| `msg.body` | string | Email body content (optional - has default) |
-| `msg.bodyType` | string | "text" (default) or "html" |
-| `msg.file_id` | string | *(Optional)* Single file attachment from upload node |
-| `msg.attachments` | array | *(Optional)* Multiple attachments: `[{ fileId: "uuid" }]` |
-
-### Outputs
-
-| Output | When | Properties |
-|--------|------|------------|
-| **1 - Success** | HTTP 200 | `msg.email_id`, `msg.resend_id`, `msg.statusCode` |
-| **2 - Error** | API/network error | `msg.payload.error`, `msg.statusCode` |
-
-### File Attachments
-
-**Single file (direct connection):** Connect the upload node directly to the mail node. The mail node automatically uses `msg.file_id`.
-
-```
-[file-in] → [upload] → [send email]
-```
-
-**Multiple files:** Use a function node to collect file IDs into `msg.attachments`.
-
-### Status Codes
-
-| Code | Meaning |
-|------|---------|
-| 200 | Email sent successfully |
-| 400 | Bad request (missing fields) |
-| 401 | Invalid API key |
-| 403 | Service not enabled |
-| 429 | Daily email limit reached |
-
----
-
-## Send SMS
-
-Sends SMS messages via the ProcessMail API using Twilio.
-
-### Configuration
-
-| Property | Description |
-|----------|-------------|
-| Config | Your Process Link credentials (API Key) |
-| To | Recipient phone number in E.164 format (e.g., `+61412345678`) |
-| Body | SMS message text |
-| Timeout | Request timeout in milliseconds (default: 30000) |
-
-### Inputs
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `msg.to` | string \| string[] | Recipient phone number(s) in E.164 format |
-| `msg.body` | string | SMS message text |
-
-### Outputs
-
-| Output | When | Properties |
-|--------|------|------------|
-| **1 - Success** | HTTP 200 | `msg.message_id`, `msg.twilio_sid`, `msg.payload.segment_count`, `msg.statusCode` |
-| **2 - Error** | API/network error | `msg.payload.error`, `msg.payload.code`, `msg.statusCode` |
-
-### Phone Number Format
-
-Phone numbers must be in **E.164 format**: `+` followed by country code and number.
-
-- Australia: `+61412345678` (drop the leading 0)
-- US/Canada: `+12025551234`
-- UK: `+447911123456`
-
-### Status Codes
-
-| Code | Meaning |
-|------|---------|
-| 200 | SMS sent successfully |
-| 400 | Bad request (missing fields, invalid phone, message too long) |
-| 401 | Invalid API key |
-| 403 | Service not enabled or missing scope |
-| 429 | Daily SMS limit reached |
-| 503 | SMS not configured (Twilio credentials missing) |
-
----
-
-## Notify Group
-
-Sends notifications to a ProcessMail notification group. Channel-agnostic: ProcessMail delivers to each member via their preferred contact method (email, SMS, or both).
-
-### How It Works
-
-Instead of specifying individual email addresses or phone numbers in your Node-RED flow, you reference a **notification group** by its key. Groups are managed in the ProcessMail web interface, where org admins can:
-
-- Add/remove members (platform users or external contacts)
-- Set each member's preferred contact method (email, SMS, or both)
-
-This means the programmer sets up the flow once, and authorised org members can manage who receives notifications without touching Node-RED.
-
-### Configuration
-
-| Property | Description |
-|----------|-------------|
-| Config | Your Process Link credentials (API Key) |
-| Group Key | The notification group key (e.g. `maintenance-alerts`) |
-| Subject | Notification subject (used for emails) |
-| Body | Notification body content |
-| Body Type | Plain Text or HTML (applies to email recipients) |
-| Use branded email template | Wraps emails in the ProcessLink branded template. SMS is always plain text |
-| Link only | When files are attached via the upload node, send them as download links instead of email attachments. Useful for large files. Has no effect if no files are attached |
-| Timeout | Request timeout in milliseconds (default: 30000) |
-
-### Inputs
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `msg.group_key` | string | Notification group key (e.g. `maintenance-alerts`) |
-| `msg.subject` | string | Notification subject |
-| `msg.body` | string | Notification body |
-| `msg.bodyType` | string | *(Optional)* "text" (default) or "html" |
-| `msg.file_id` | string | *(Optional)* Single file attachment from upload node |
-| `msg.attachments` | array | *(Optional)* Multiple attachments: `[{ fileId: "uuid" }]` |
-| `msg.linkOnly` | boolean | *(Optional)* Send files as links instead of attachments |
-
-### Outputs
-
-| Output | When | Properties |
-|--------|------|------------|
-| **1 - Success** | Notifications sent | `msg.payload.ok`, `msg.payload.notifications_sent`, `msg.payload.total_recipients`, `msg.group_key` |
-| **2 - Error** | Request failed | `msg.payload.error`, `msg.payload.code`, `msg.statusCode` |
-
-**Success payload:**
-- `notifications_sent` - `{ email: 3, sms: 2 }` breakdown by channel
-- `total_recipients` - total unique recipients notified
-- `message_ids` - ProcessMail log IDs for tracking
-- `failures` - *(only if partial failures)* lists failed recipients with errors
-
-### Examples
-
-**Simple alert:**
-```javascript
-msg.group_key = "maintenance-alerts";
-msg.subject = "Motor Fault on Line 3";
-msg.body = "Temperature exceeded threshold at 14:32.";
-return msg;
-```
-
-**With file attachment (from upload node):**
-```
-[file-in] → [upload] → [notify group]
-```
-The `msg.file_id` from the upload node is automatically included. Email recipients get the file as an attachment. SMS recipients get a download link.
-
-**Dynamic group selection:**
-```javascript
-if (msg.payload.severity === "critical") {
-    msg.group_key = "critical-alerts";
-} else {
-    msg.group_key = "general-notifications";
-}
-msg.subject = "Alert: " + msg.payload.message;
-msg.body = msg.payload.details;
-return msg;
-```
-
-### Setup
-
-1. Create a notification group in ProcessMail (`/org/your-org/groups`)
-2. Add members and set their contact preferences
-3. Copy the group key
-4. Create an API key in Portal with the `processmail:notify-group` scope
-5. Configure this node with the API key and group key
-
-### Status Codes
-
-| Code | Meaning |
-|------|---------|
-| 200 | Notifications sent (check `payload.failures` for partial failures) |
-| 400 | Bad request (missing fields, empty group, no valid recipients) |
-| 401 | Invalid API key |
-| 403 | Service not enabled or missing scope |
-| 404 | Notification group not found |
-| 429 | Daily limit exceeded |
-| 500 | Server error |
-
----
-
-## System Info
-
-Outputs system information for diagnostics and monitoring.
-
-### Configuration
-
-| Property | Description |
-|----------|-------------|
-| Send on deploy | When checked (default), outputs system info when the flow is deployed |
-
-### Triggers
-
-- **On deploy** (if enabled) - Automatically sends when flow starts
-- **On input** - Any incoming message triggers a fresh reading
-
-### Output
-
-`msg.payload` contains:
-
-| Property | Description |
-|----------|-------------|
-| `timestamp` | ISO 8601 UTC timestamp |
-| `localTime` | Device local time string |
-| `timezone` | Timezone name (e.g., "Australia/Sydney") |
-| `hostname` | Device hostname |
-| `platform` | "win32", "linux", or "darwin" |
-| `os` | OS name and version |
-| `arch` | CPU architecture |
-| `user` | User running Node-RED |
-| `workingDirectory` | Node-RED working directory |
-| `uptime` | System uptime (`raw`, `breakdown`, `formatted`) |
-| `cpu` | Model, cores, architecture |
-| `memory` | Total, free, used (bytes + formatted), usedPercent |
-| `disk` | Total, free, used (bytes + formatted), usedPercent |
-| `network` | primaryIP, mac, interfaces |
-| `nodeRed` | version, uptime |
-| `nodejs` | version |
-| `processMemory` | rss, heapTotal, heapUsed |
-
-### Uptime/Memory Structure
-
-```json
-{
-  "uptime": {
-    "raw": 432000,
-    "breakdown": { "days": 5, "hours": 0, "minutes": 0, "seconds": 0 },
-    "formatted": "5d 0h 0m 0s"
-  },
-  "memory": {
-    "total": { "bytes": 17179869184, "formatted": "16.00 GB" },
-    "free": { "bytes": 8589934592, "formatted": "8.00 GB" },
-    "used": { "bytes": 8589934592, "formatted": "8.00 GB" },
-    "usedPercent": 50
-  }
-}
-```
+Triggers on deploy (optional) or on any incoming message. Single output with everything in `msg.payload`.
 
 ---
 
 ## Example Flows
 
-We include a comprehensive demo flow with examples for every node. Import it into Node-RED to get started quickly.
+We include a demo flow with examples for every node. Import it into Node-RED to try things out.
 
-**📥 [Download the full demo flow →](https://github.com/process-link/node-red-contrib-processlink/blob/main/examples/demo-flow.json)**
+**[Download the demo flow](https://github.com/process-link/node-red-contrib-processlink/blob/main/examples/demo-flow.json)** — copy the JSON, then Menu > Import > Clipboard.
 
-The demo flow includes 9 ready-to-use examples:
-
-1. **File Upload** - Read a file and upload to Process Link
-2. **File Upload with Timestamp** - Auto-prefix filenames with date/time
-3. **File Upload to Folder** - Upload to a specific area/folder
-4. **Send Email** - Send a plain text email
-5. **Send Email with Attachment** - Upload a file then email it
-6. **Send SMS** - Send an SMS alert
-7. **System Info** - Output device diagnostics
-8. **Notify Group** - Send alerts to a managed notification group
-9. **Upload + Notify Group** - Upload a file and notify a group with the attachment
-
-To import: copy the JSON from the demo flow file, then in Node-RED go to **Menu → Import → Clipboard** and paste.
-
-### Quick Start Example
-
-Here's a minimal file upload flow to get you started:
+<details>
+<summary>Quick start flow (file upload)</summary>
 
 ```json
 [
@@ -508,21 +199,14 @@ Here's a minimal file upload flow to get you started:
 ]
 ```
 
-**After importing:**
-1. Double-click the **Read File** node → change the file path to your file
-2. Double-click the **Upload to Process Link** node → click the pencil icon → enter your **Site ID** and **API Key**
-3. Click **Deploy**
-4. Click the inject button to upload
-
-> **Want more?** See the [examples folder](https://github.com/process-link/node-red-contrib-processlink/tree/main/examples) for the full demo flow covering all nodes.
+After importing, update the file path and add your credentials.
+</details>
 
 ---
 
 ## Security
 
-- ✅ API keys are stored encrypted by Node-RED
-- ✅ All communication uses HTTPS
-- ✅ Keys are never logged or exposed in flow exports
+API keys are stored encrypted by Node-RED, all communication uses HTTPS, and keys are never logged or exposed in flow exports.
 
 ## Requirements
 
@@ -531,9 +215,9 @@ Here's a minimal file upload flow to get you started:
 
 ## Support
 
-- 🐛 **Issues**: [GitHub Issues](https://github.com/process-link/node-red-contrib-processlink/issues)
-- 📧 **Email**: support@processlink.com.au
-- 🌐 **Website**: [processlink.com.au](https://processlink.com.au)
+- **Issues**: [GitHub](https://github.com/process-link/node-red-contrib-processlink/issues)
+- **Email**: support@processlink.com.au
+- **Website**: [processlink.com.au](https://processlink.com.au)
 
 ## License
 

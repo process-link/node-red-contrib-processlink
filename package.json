@@ -22,7 +22,6 @@
     "diagnostics",
     "monitoring",
     "sms",
-    "twilio",
     "alerts",
     "notifications",
     "notification-groups"
