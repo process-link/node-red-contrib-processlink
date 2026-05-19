@@ -1,0 +1,15 @@
+# --- Process Link branch guard: block direct pushes to protected branches ---
+while read -r _local_ref _local_oid remote_ref _remote_oid; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/staging)
+      if [ "$PL_ALLOW_PROTECTED_PUSH" != "1" ]; then
+        echo "Blocked: direct push to $remote_ref is not allowed."
+        echo "Use a PR: feature -> staging -> main."
+        echo "See platform-docs/conventions/git-workflow.md"
+        echo "(Release-time staging reset only: PL_ALLOW_PROTECTED_PUSH=1)"
+        exit 1
+      fi
+      ;;
+  esac
+done
+# --- end branch guard ---
