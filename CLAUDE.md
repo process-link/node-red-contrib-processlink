@@ -1,5 +1,9 @@
 # CLAUDE.md - AI Assistant Guidelines
 
+## Git workflow (read first)
+
+Never push directly to `main` or `staging`. All changes go through a feature branch and a pull request: feature into `staging`, then `staging` into `main`. After each release, reset `staging` from `main`. Direct pushes to protected branches are blocked locally by a pre-push guard and server-side by GitHub branch protection. Canonical workflow: the platform-docs repo, `conventions/git-workflow.md`.
+
 ## Critical: This is a Published NPM Package
 
 This package (`@processlink/node-red-contrib-processlink`) is **published to NPM** and used by real customers in production Node-RED environments. Changes here can break many people's workflows.
