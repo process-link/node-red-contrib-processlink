@@ -102,6 +102,30 @@ Jest-based tests live under `tests/`:
 
 Test config: `jest.config.js`. Runs via `npm test` (also enforced as `prepublishOnly`).
 
+### The test gateway (a real Node-RED, on Tom's network)
+
+Released versions are also tested on `pl-gw-dev-01` (192.168.20.213, editor
+at http://192.168.20.213:1880 behind Tom's login), the permanent Scribe dev
+gateway. That box has **two jobs, on two tabs**:
+
+- **Process Link nodes (test)**: this package, started from
+  `examples/demo-flow.json`. Yours to test on.
+- **Scribe simulator**: proves the Scribe IoT pipe around the clock. **Not
+  yours.** Do not edit it, rewire it or wire into it.
+
+Its setup lives in the **scribe** repo, `edge/gateway/` (read its README,
+"What runs on pl-gw-dev-01"), not here:
+
+- The installed version is pinned there (`NODES_VERSION` in
+  `provision.sh`). To try a new release on the gateway, publish it, bump that
+  pin and rerun `provision.sh`.
+- The flows file is versioned there. Changes made in the editor are copied
+  into git with `pull-flows.sh`; `provision.sh` refuses to overwrite editor
+  changes git does not have.
+- Its tests forbid any API node being reachable from an inject that fires by
+  itself, and any credential in git. API keys are typed into the editor and
+  stored encrypted on the device. SMS costs money per message.
+
 ## Platform Integration
 
 This package talks to Process Link platform APIs over HTTPS using centralised `plk_*` API keys. The shared platform context (auth, API envelope, API key format, scopes) lives in the sibling repo at [`../ProcessLink_PortalAndApps/platform-docs/`](../ProcessLink_PortalAndApps/platform-docs/).
