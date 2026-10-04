@@ -138,3 +138,14 @@ Key endpoints this package calls:
 - `processmail.processlink.com.au/api/v1/notify-group` — Notification group send
 
 Scopes required per node are documented in the respective `.html` help panels.
+
+## Platform standards
+
+Shared standards live in [platform-docs STANDARDS.md](https://github.com/process-link/platform-docs/blob/main/STANDARDS.md). Before you change a shared area, read the relevant doc there. The most relevant for this repo:
+
+- [MQTT topics](https://github.com/process-link/platform-docs/blob/main/contracts/mqtt-topics.md)
+- [UNS foundation decision](https://github.com/process-link/platform-docs/blob/main/decisions/2026-07-12-uns-foundation.md)
+- [0006 Edge path is Node-RED first](https://github.com/process-link/platform-docs/blob/main/decisions/0006-edge-path-is-node-red-first.md)
+- [Git workflow](https://github.com/process-link/platform-docs/blob/main/conventions/git-workflow.md)
+
+Changes to shared areas (auth, permissions, database, cross-app APIs) need System Architect's review before merge.
